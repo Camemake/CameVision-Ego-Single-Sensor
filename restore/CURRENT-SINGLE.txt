@@ -1,0 +1,6 @@
+known-good-20260903-single-camera
+This is the current CameVision Single camera restore point.
+SC233HGS chip id 0xcb61, /dev/video13 NV12 1920x1200, CAM_PWDN ACTIVE_LOW.
+Product path: CameVision-Single.cmd / python tools/cv_single_studio.py
+Live page :8081, IMU :8083. USB stays ADB.
+Do not flash gen1 serial 0558fa189447bc45.

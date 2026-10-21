@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hardware · CameVision Single · Camemake</title>
+  <meta name="description" content="CameVision Single pinmux: one SC233HGS, one IMU, Wi-Fi, storage, power.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Single</b>
+        <span>Camemake monocular &middot; 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">Product</a>
+        <a href="start.html">Get started</a>
+        <a href="tool.html">Offline tool</a>
+        <a class="active" href="hardware.html">Hardware</a>
+        <a href="mechanical.html">Mechanical</a>
+        <a href="optics.html">Optics</a>
+        <a href="software.html">Software</a>
+        <a href="datasheet.html">Datasheet</a>
+      </nav>
+      <a class="buy" href="http://127.0.0.1:8081/">Live page</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">Same RV1126B platform as Ego</div>
+      <h1>Hardware</h1>
+      <p class="lead">One CSI camera and one IMU. Source: <code>device-tree/rv1126b-camevision-single.dts</code>.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>Fitted parts</h2>
+      <table>
+        <tr><th>Block</th><th>On the board</th></tr>
+        <tr><td>SoC</td><td>RV1126B</td></tr>
+        <tr><td>DDR4</td><td>K4A8G165WG 16-bit 1 GB</td></tr>
+        <tr><td>eMMC</td><td>BWCTAK611G16G 16 GB</td></tr>
+        <tr><td>Camera</td><td>1 × SC233HGS, I2C3 <code>@0x30</code>, chip id <code>0xcb61</code></td></tr>
+        <tr><td>IMU</td><td>1 × LSM6DSVQTR on SPI1</td></tr>
+        <tr><td>PMIC</td><td>RK801-2, I2C0 0x27</td></tr>
+        <tr><td>RTC</td><td>RV-3028-C7, I2C2 0x52</td></tr>
+        <tr><td>Wi-Fi / BT</td><td>VS6621 on SDMMC1 + UART2</td></tr>
+        <tr><td>Charger</td><td>BQ24072</td></tr>
+        <tr><td>microSD</td><td>SDMMC0</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Camera</h2>
+      <p class="callout">Mono pipe only. No CAM1, no FSYNC / EFSYNC, no stereo baseline.</p>
+      <table>
+        <tr><th>Net</th><th>Pad / GPIO</th><th>Function</th></tr>
+        <tr><td>CAM0 MIPI</td><td>CSI RX0, 4-lane + CLK</td><td>SC233HGS → ISP <code>/dev/video13</code></td></tr>
+        <tr><td>I2C3 SCL/SDA</td><td>I2C3 <code>@0x30</code></td><td>Sensor control</td></tr>
+        <tr><td>CAM0 XVCLK</td><td><code>clk_mipi0_out2io</code></td><td>Sensor clock on CAM_CLK0_OUT</td></tr>
+        <tr><td>CAM_PWDN</td><td>GPIO4_A6</td><td>XSHUTDN, <strong>ACTIVE_LOW</strong> (run = high)</td></tr>
+        <tr><td>PWR_EN_2.8V</td><td>GPIO0_B0</td><td>AVDD 2.8 V (kernel gpio-regulator)</td></tr>
+        <tr><td>PWR_EN_1.5V</td><td>GPIO0_B1</td><td>DVDD 1.5 V (kernel gpio-regulator)</td></tr>
+        <tr><td>Product 180</td><td>subdev <code>/dev/v4l-subdev4</code></td><td><code>horizontal_flip=1</code> · <code>vertical_flip=1</code></td></tr>
+      </table>
+      <p>Do not steal CAM_PWDN from userspace. Do not enable SPI1 CSN1 — that pad is CAM_PWDN.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>IMU</h2>
+      <table>
+        <tr><th>Net</th><th>Pad / GPIO</th><th>Function</th></tr>
+        <tr><td>SPI1 CLK/CS0/MISO/MOSI</td><td>SPI1_M0 GPIO6_B1–B4</td><td>LSM6DSVQTR</td></tr>
+        <tr><td>IIO</td><td><code>st,lsm6dsv</code></td><td>One accel + one gyro pair</td></tr>
+      </table>
+      <table>
+        <tr><th></th><th>Accel</th><th>Gyro</th></tr>
+        <tr><td>This package (HUD)</td><td>480 Hz</td><td>480 Hz</td></tr>
+        <tr><td>Full-scale (typical)</td><td>±2 / 4 / 8 / 16 g</td><td>±125 / 250 / 500 / 1000 / 2000 / 4000 dps</td></tr>
+      </table>
+      <p>JSON on <code>:8083</code>: <code>imu0</code>, <code>odr_hz</code>, <code>read_hz</code>. Live page proxies <code>/imu</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Wi-Fi, SD, USB, power, LED, boot</h2>
+      <table>
+        <tr><th>Net</th><th>Function</th></tr>
+        <tr><td>eMMC</td><td>U2A, live <code>mmc0</code></td></tr>
+        <tr><td>SDMMC0</td><td>microSD</td></tr>
+        <tr><td>SDMMC1</td><td>VS6621 Wi-Fi</td></tr>
+        <tr><td>USB-C</td><td>ADB gadget <code>2207:0006</code>, <code>dr_mode</code> peripheral</td></tr>
+        <tr><td>STATUS LED R/G/B</td><td>GPIO0_A6 / A5 / A4, common-anode, active low</td></tr>
+        <tr><td>UART0</td><td>Console 1.5 Mbaud</td></tr>
+        <tr><td>BOOT / RST</td><td>Maskrom: hold BOOT, tap RST</td></tr>
+      </table>
+      <p>Wi-Fi GPIO on Single is board-specific. Do not copy Ego <code>GPIO3_B2</code> pwrseq onto Single microSD pins.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Warnings</h2>
+      <ul>
+        <li>Do not flash gen1 serial <code>0558fa189447bc45</code>.</li>
+        <li><code>upgrade_tool db</code> once per Maskrom session.</li>
+        <li>USB stays ADB. Do not switch this product path to UVC.</li>
+        <li>CAM_PWDN polarity is M1 <strong>ACTIVE_LOW</strong>. ACTIVE_HIGH holds the sensor in reset.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Single</div>
+      <div>device-tree/rv1126b-camevision-single.dts</div>
+    </div>
+  </footer>
+</body>
+</html>

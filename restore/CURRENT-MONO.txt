@@ -1,0 +1,6 @@
+release-1.0-mono-mira220-20261014
+This is the current CameVision Mono / MIRA220 restore point.
+One MIRA220 1600x1400 RAW10 on /dev/video1, view 1400x1600.
+Product path: python tools/cv_single_flash.py --package camevision-mono
+Live page :8081, IMU :8083. USB stays ADB.
+Do not flash gen1 serial 0558fa189447bc45.

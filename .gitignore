@@ -1,0 +1,71 @@
+# Host caches and donor dumps
+build/
+firmware/
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+*.part
+
+# Recovery / lock / diag trees — not the published kits
+restore/recovery-*/
+restore/diag-adb-*/
+restore/lock-*/
+restore/_readback/
+restore/images/
+restore/updates/
+restore/restore-aura-stock.ps1
+restore/restore-m1.ps1
+
+# Extra images that are not the Maskrom kit
+**/rootfs_adbwait.img
+**/camevision_boot_ss.img
+**/*.nv12
+**/proof-*.jpg
+**/proof-*.png
+
+# Old UVC / USB3 experiments next to the shared SPL images
+restore/known-good-20260819-camera-adb/overlay/
+restore/known-good-20260819-camera-adb/*.ps1
+restore/known-good-20260819-camera-adb/notes/
+restore/known-good-20260903-single-camera/USB3.md
+restore/known-good-20260903-single-camera/flash-usb3-ss.ps1
+restore/known-good-20260903-single-camera/overlay/usb3*
+restore/known-good-20260903-single-camera/overlay/cv_usb3*
+restore/known-good-20260903-single-camera/overlay/persist-hs-usb.sh
+restore/known-good-20260903-single-camera/notes/
+
+# Local Wi-Fi credentials
+**/wpa_camevision.conf
+**/wpa_supplicant.conf
+
+# PCB schematics stay private
+schematic/
+**/*schematic*.pdf
+CameVisionMono*.pdf
+CameVision Single*.pdf
+
+# Bundled host runtimes (offline zip only)
+host/python/
+host/tmp/
+host/linux/python-*.tar.gz
+host/linux/py-tmp/
+host/linux/pt-tmp/
+host/DriverAssitant_v5.14.zip
+host/.host-installed
+
+# Agent / editor
+KNOWLEDGE.md
+.cursor/
+agent-transcripts/
+share/
+*.swp
+Thumbs.db
+Desktop.ini
+My Recordings/
+
+# Marketing site pages (installer UI stays)
+docs/about.html
+docs/index.html
+docs/datasheet.html

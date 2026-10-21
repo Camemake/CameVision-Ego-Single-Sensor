@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mechanical · CameVision Single · Camemake</title>
+  <meta name="description" content="CameVision Single mechanical assembly and thermal path for one camera.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Single</b>
+        <span>Camemake monocular &middot; 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">Product</a>
+        <a href="start.html">Get started</a>
+        <a href="tool.html">Offline tool</a>
+        <a href="hardware.html">Hardware</a>
+        <a class="active" href="mechanical.html">Mechanical</a>
+        <a href="optics.html">Optics</a>
+        <a href="software.html">Software</a>
+        <a href="datasheet.html">Datasheet</a>
+      </nav>
+      <a class="buy" href="http://127.0.0.1:8081/">Live page</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">Mono layout</div>
+      <h1>Mechanical and thermal</h1>
+      <p class="lead">One module, one IMU, RV1126B in the centre. No stereo bar and no second barrel.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>The two faces</h2>
+      <div class="board-grid">
+        <figure class="board-fig">
+          <figcaption>
+            <strong>Camera side.</strong> One SC233HGS module. Centre square: <strong>RV1126B</strong>. Support the PCB outline, never the barrel.
+          </figcaption>
+        </figure>
+        <figure class="board-fig">
+          <figcaption>
+            <strong>Connector side.</strong> USB-C, PH, RST, BOOT, UART. Centre via field is the back-side thermal landing under the RV1126B.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Where the heat is</h2>
+      <p class="callout">Thermal path: <strong>RV1126B</strong>. One ISP and the NPU. The camera, eMMC and VS6621 stay clear of that path.</p>
+      <table>
+        <tr><th>Zone</th><th>On the PCB</th><th>In the housing</th></tr>
+        <tr><td>SoC lid</td><td>Centre square, camera side</td><td>Primary cool point. Soft pad onto a metal wall or small heatsink.</td></tr>
+        <tr><td>SoC via field</td><td>Centre of the connector side</td><td>Secondary cool point. Isolating gap pad into the same metal.</td></tr>
+        <tr><td>Camera</td><td>One barrel</td><td>Optical keep-out. Never clamp or twist the module.</td></tr>
+        <tr><td>Wi-Fi / antennas</td><td>RF square</td><td>Plastic or air. Metal here kills range and does not cool the SoC.</td></tr>
+      </table>
+      <p>One camera draws less than Ego’s dual ISP. Still design the lid pad for the NPU-on band in still air.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Cooling is part of the housing</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>1. Pick up the lid</strong>
+          A 1–2 mm isolating silicone gap pad on the RV1126B lid, compressed 10–30 % onto aluminium or steel.
+        </div>
+        <div class="card">
+          <strong>2. Use the via field</strong>
+          A second pad on the connector-side via field, into the same metal.
+        </div>
+        <div class="card">
+          <strong>3. Hold the board, not the barrel</strong>
+          Bosses or a pocket under the outline. The camera floats in its hole.
+        </div>
+        <div class="card">
+          <strong>4. Leave service faces</strong>
+          USB-C, BOOT, RST and PH stay reachable. Maskrom: hold BOOT, tap RST.
+        </div>
+      </div>
+      <table>
+        <tr><th></th><th>NPU off</th><th>NPU on</th></tr>
+        <tr><td>Die in still 25 °C air</td><td>35–42 °C</td><td>40–45 °C</td></tr>
+        <tr><td>Practical part</td><td>50 × 50 mm, 12 mm fins</td><td>60 × 60 mm, 15–18 mm fins, or one housing wall</td></tr>
+        <tr><td>Kernel trip</td><td colspan="2">115 °C · <code>cpu-thermal</code></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Assembly</h2>
+      <div class="steps">
+        <article class="step">
+          <div class="step-num">1</div>
+          <h2>Board</h2>
+          <ol>
+            <li>Handle the outline, not the barrel and not the SoC lid.</li>
+            <li>Seat the MIPI / module connector fully. A half-click gives 0 fps and CSI errors.</li>
+          </ol>
+        </article>
+        <article class="step">
+          <div class="step-num">2</div>
+          <h2>Thermal parts</h2>
+          <ol>
+            <li>Lid pad on the RV1126B square only.</li>
+            <li>Back pad on the via field only. Stay off USB-C, PH, RST, BOOT.</li>
+          </ol>
+        </article>
+        <article class="step">
+          <div class="step-num">3</div>
+          <h2>Housing</h2>
+          <ol>
+            <li>Lower the board onto the bosses. The camera enters its hole last, with no side load.</li>
+            <li>Close the lid so the SoC pad compresses. Check that BOOT and RST still click.</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Keep-outs</h2>
+      <table>
+        <tr><th>Feature</th><th>Why</th></tr>
+        <tr><td>Camera barrel</td><td>Optical axis. A clamp here can crack the module.</td></tr>
+        <tr><td>Module connector</td><td>Mechanical seating. Loose flex = no MIPI frames.</td></tr>
+        <tr><td>BOOT / RST / RX / TX</td><td>Maskrom and console.</td></tr>
+        <tr><td>PH</td><td>Battery lead. Strain-relieve in the shell.</td></tr>
+        <tr><td>RF square</td><td>Wi-Fi / BT. Metal here is a shield, not a cooler.</td></tr>
+      </table>
+      <pre>adb shell cat /sys/class/thermal/thermal_zone0/temp</pre>
+      <p>Millidegrees C. Operating <strong>35000–45000</strong>. Critical <strong>115000</strong>.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Single</div>
+      <div><a href="hardware.html">Hardware</a> · <a href="tool.html">Offline tool</a></div>
+    </div>
+  </footer>
+</body>
+</html>

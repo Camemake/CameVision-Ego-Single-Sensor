@@ -1,0 +1,3 @@
+#!/bin/sh
+# CameVision Single — Ego stereo frontend is disabled on this image.
+exit 0

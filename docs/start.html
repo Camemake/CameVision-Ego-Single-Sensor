@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Get started · CameVision Single · Camemake</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Single</b>
+        <span>Camemake monocular &middot; 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">Product</a>
+        <a class="active" href="start.html">Get started</a>
+        <a href="tool.html">Offline tool</a>
+        <a href="hardware.html">Hardware</a>
+        <a href="mechanical.html">Mechanical</a>
+        <a href="optics.html">Optics</a>
+        <a href="software.html">Software</a>
+        <a href="datasheet.html">Datasheet</a>
+      </nav>
+      <a class="buy" href="http://127.0.0.1:8081/">Live page</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">Offline installer</div>
+      <h1>Get started</h1>
+      <p class="lead">Open the Camemake installer. Same path on Windows and Linux, on an empty board or a board that already has images.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>Open the tool</h2>
+      <p>Windows: double-click <strong>CameVision-Single.cmd</strong>.</p>
+      <p>Linux: open <strong>CameVision-Single.sh</strong>.</p>
+      <p>Or run <code>python tools/cv_single_studio.py</code>. The offline tool opens at <code>http://127.0.0.1:8765/tool.html</code>.</p>
+      <p>To rebuild this installer for another PC: <code>python tools/cv_single_pack_offline.py</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap steps">
+      <article class="step">
+        <div class="step-num">USB</div>
+        <h2>Maskrom</h2>
+        <ol>
+          <li>Connect USB-C and power the board.</li>
+          <li>Click <strong>Install USB driver</strong>.</li>
+          <li>Hold <strong>BOOT</strong>, tap <strong>RESET</strong>, keep BOOT held.</li>
+        </ol>
+      </article>
+      <article class="step">
+        <div class="step-num">Package</div>
+        <h2>Install</h2>
+        <ol>
+          <li>Select <strong>CameVision Single</strong>.</li>
+          <li>Click <strong>Install</strong>.</li>
+          <li>Release BOOT when the board starts.</li>
+        </ol>
+        <p>The package writes loader, env, idblock, U-Boot, boot, userdata, oem, rootfs, and the overlay.</p>
+        <p>Do not flash gen1 serial <code>0558fa189447bc45</code>.</p>
+      </article>
+      <article class="step">
+        <div class="step-num">ADB</div>
+        <h2>Open</h2>
+        <ol>
+          <li>Click <strong>Open</strong> for <code>http://127.0.0.1:8081/</code>.</li>
+          <li>Click <strong>Extended diagnostics</strong> for a full board dump.</li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Single</div>
+      <div>Local tool · 127.0.0.1</div>
+    </div>
+  </footer>
+</body>
+</html>

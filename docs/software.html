@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Software · CameVision Single · Camemake</title>
+  <meta name="description" content="CameVision Single software: mono live page, IMU HUD, IQ, host offline tool.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Single</b>
+        <span>Camemake monocular &middot; 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">Product</a>
+        <a href="start.html">Get started</a>
+        <a href="tool.html">Offline tool</a>
+        <a href="hardware.html">Hardware</a>
+        <a href="mechanical.html">Mechanical</a>
+        <a href="optics.html">Optics</a>
+        <a class="active" href="software.html">Software</a>
+        <a href="datasheet.html">Datasheet</a>
+      </nav>
+      <a class="buy" href="http://127.0.0.1:8081/">Live page</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">This package</div>
+      <h1>Software</h1>
+      <p class="lead">One-pane live page and one IMU HUD run on the board. The PC flashes, deploys, and forwards ADB.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>Where it runs</h2>
+      <table>
+        <tr><th>Place</th><th>What sits there</th></tr>
+        <tr><td>This PC</td><td>Offline tool, USB driver, flash, overlay push, ADB forwards, autostart, diagnostics</td></tr>
+        <tr><td>Board <code>/userdata</code></td><td>Mono live page, IMU HUD, Wi-Fi STA, IQ JSON, boot scripts</td></tr>
+        <tr><td>Board kernel</td><td>DTB, CSI RX0, I2C3, SPI1, SDIO Wi-Fi, ADB gadget</td></tr>
+      </table>
+      <p>Sources: <code>tools/</code>. Overlay → <code>/userdata/</code>. No stereo matcher, depth, FSYNC, or second IMU.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Drivers</h2>
+      <table>
+        <tr><th>Block</th><th>Driver</th><th>Live nodes</th></tr>
+        <tr><td>MIPI sensor</td><td><code>sc233hgs</code></td><td>I2C <code>3-0030</code> · chip id <code>0xcb61</code> · <code>/dev/v4l-subdev4</code></td></tr>
+        <tr><td>CSI / CIF / ISP</td><td>dphy0 · mipi0-csi2 · rkcif · rkisp-vir0</td><td><code>/dev/video13</code> NV12 1920×1200</td></tr>
+        <tr><td>3A / IQ</td><td><code>rkaiq_3A_server</code></td><td><code>sc233hgs_efference-sc233hgs_default.json</code>, 50 Hz AE</td></tr>
+        <tr><td>IMU</td><td><code>st,lsm6dsv</code></td><td>One IIO pair on SPI1</td></tr>
+        <tr><td>Wi-Fi / BLE</td><td>VS6621 SDIO</td><td><code>wlan0</code></td></tr>
+        <tr><td>USB gadget</td><td>DWC3 peripheral</td><td>ADB <code>2207:0006</code></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Boot chain</h2>
+      <pre>S11hwclock
+  → S99camevision-single
+    → camevision-single.sh
+      → kmpp, hw, LED
+      → camevision-wifi.sh
+      → camevision-aiq.sh
+      → camevision-imu.sh
+      → single_imu_hud.py (:8083)
+      → wait /dev/video13
+      → sensor 180 (hflip+vflip)
+      → single_live.py (:8081)</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>On the board</h2>
+      <table>
+        <tr><th>Block</th><th>File</th><th>Role</th></tr>
+        <tr><td>Live page</td><td><code>tools/single_live.py</code></td><td>One MJPEG pane from <code>/dev/video13</code>, port 8081</td></tr>
+        <tr><td>IMU HUD</td><td><code>tools/single_imu_hud.py</code></td><td>One LSM6 JSON, port 8083</td></tr>
+        <tr><td>Boot start</td><td><code>tools/camevision-single.sh</code></td><td>Rails, 3A, HUD, live</td></tr>
+        <tr><td>Init</td><td><code>tools/S99camevision-single</code></td><td>Installs to <code>/etc/init.d</code></td></tr>
+        <tr><td>IQ</td><td><code>tools/iqfiles/sc233hgs_efference-sc233hgs_default.json</code></td><td>50 Hz anti-flicker, normal AE</td></tr>
+        <tr><td>Wi-Fi</td><td><code>tools/camevision-wifi.sh</code></td><td>VS6621 STA</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Live page routes · 8081</h2>
+      <p>One pane. Not Ego’s <code>/ov0</code> + <code>/ov1</code> stereo layout.</p>
+      <table>
+        <tr><th>Path</th><th>Body</th></tr>
+        <tr><td><code>/</code></td><td>Mono HTML + IMU HUD</td></tr>
+        <tr><td><code>/ov0</code></td><td>MJPEG from <code>/dev/video13</code></td></tr>
+        <tr><td><code>/snap0</code></td><td>One JPEG</td></tr>
+        <tr><td><code>/stat</code></td><td>FPS and format JSON</td></tr>
+        <tr><td><code>/imu</code></td><td>Proxy to :8083</td></tr>
+        <tr><td><code>/brand.png</code></td><td>Camemake mark</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Flash</h2>
+      <table>
+        <tr><th>LBA</th><th>Image</th></tr>
+        <tr><td>loader (db once)</td><td><code>rv1126b_spl_loader_k4a8g.bin</code></td></tr>
+        <tr><td><code>0x0</code></td><td><code>env.img</code></td></tr>
+        <tr><td><code>0x40</code></td><td><code>idblock.img</code></td></tr>
+        <tr><td><code>0x440</code></td><td><code>uboot.img</code></td></tr>
+        <tr><td><code>0x2440</code></td><td><code>camevision_boot.img</code></td></tr>
+        <tr><td><code>0x7C40</code></td><td><code>userdata.img</code></td></tr>
+        <tr><td><code>0x207C40</code></td><td><code>oem_noko.img</code></td></tr>
+        <tr><td><code>0x607C40</code></td><td><code>rootfs_bootstable.img</code></td></tr>
+      </table>
+      <p>From the offline tool: USB / Maskrom · select CameVision Single · Install. Overlay is pushed over ADB.</p>
+      <pre>python tools/cv_single_flash.py --prebuilt
+python tools/cv_single_overlay_deploy.py
+python tools/cv_single_page.py</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>On this PC</h2>
+      <table>
+        <tr><th>Block</th><th>File</th><th>Role</th></tr>
+        <tr><td>Offline tool</td><td><code>tools/cv_single_studio.py</code></td><td>Local site :8765</td></tr>
+        <tr><td>Host first-run</td><td><code>tools/cv_single_setup.py</code></td><td>Python, ADB, USB, autostart</td></tr>
+        <tr><td>USB driver</td><td><code>tools/cv_single_driver.py</code></td><td>Rockusb + ADB</td></tr>
+        <tr><td>Flash</td><td><code>tools/cv_single_flash.py</code></td><td>Maskrom write</td></tr>
+        <tr><td>Overlay</td><td><code>tools/cv_single_overlay_deploy.py</code></td><td>ADB copy into <code>/userdata</code></td></tr>
+        <tr><td>Open live</td><td><code>tools/cv_single_page.py</code></td><td>Forwards 8081 / 8083</td></tr>
+        <tr><td>Autostart</td><td><code>tools/cv_single_autostart.py</code></td><td>Plug-in watcher</td></tr>
+        <tr><td>Pack offline</td><td><code>tools/cv_single_pack_offline.py</code></td><td>Folder + zip for a clean PC</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Single</div>
+      <div>tools/</div>
+    </div>
+  </footer>
+</body>
+</html>

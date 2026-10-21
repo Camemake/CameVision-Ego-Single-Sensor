@@ -1,0 +1,49 @@
+#!/bin/sh
+# CameVision Single product boot. ADB only. Starts one-camera live page.
+chmod 755 /userdata/camevision-hw.sh /userdata/camevision-wifi.sh /userdata/camevision-imu.sh /userdata/camevision-led.sh /userdata/camevision-aiq.sh /userdata/camevision-diag.sh /userdata/camevision-single.sh /userdata/single_live.py /userdata/single_imu_hud.py 2>/dev/null
+mount -o remount,rw / 2>/dev/null || true
+printf '%s\n' '#!/bin/sh' 'exit 0' > /etc/init.d/S99ego-stereo
+chmod 755 /etc/init.d/S99ego-stereo
+rm -f /userdata/uvc-webcam.on /userdata/ego_stereo.py /userdata/ego_imu_hud.py /userdata/ego_cam_sync.py /userdata/libego_stereo.so
+mount -o remount,ro / 2>/dev/null || true
+if [ -x /userdata/camevision-single.sh ]; then
+	setsid /bin/sh -c 'sleep 8; exec /userdata/camevision-single.sh' \
+		</dev/null >/userdata/single-live-boot.log 2>&1 &
+	exit 0
+fi
+
+if [ -x /userdata/camevision-hw.sh ]; then
+	/userdata/camevision-hw.sh
+fi
+if [ -x /userdata/camevision-led.sh ]; then
+	/userdata/camevision-led.sh
+else
+	echo none > /sys/class/leds/status:red/trigger 2>/dev/null
+	echo 0 > /sys/class/leds/status:red/brightness 2>/dev/null
+	echo none > /sys/class/leds/status:green/trigger 2>/dev/null
+	echo 1 > /sys/class/leds/status:green/brightness 2>/dev/null
+	echo none > /sys/class/leds/status:blue/trigger 2>/dev/null
+	echo 0 > /sys/class/leds/status:blue/brightness 2>/dev/null
+fi
+
+( sleep 8
+	[ -x /userdata/camevision-imu.sh ] && /userdata/camevision-imu.sh >/userdata/imu-boot.log 2>&1
+) &
+( sleep 6
+	i=0
+	while [ $i -lt 4 ]; do
+		/userdata/camevision-wifi.sh >/userdata/wifi-boot.log 2>&1
+		if ip -4 addr show wlan0 2>/dev/null | grep -q 'inet '; then
+			break
+		fi
+		i=$((i + 1))
+		sleep 8
+	done
+) &
+( sleep 10
+	[ -x /userdata/camevision-aiq.sh ] && /userdata/camevision-aiq.sh >/userdata/aiq-boot.log 2>&1
+) &
+( sleep 20
+	[ -x /userdata/camevision-diag.sh ] && /userdata/camevision-diag.sh >/userdata/diag-boot.log 2>&1
+) &
+exit 0
