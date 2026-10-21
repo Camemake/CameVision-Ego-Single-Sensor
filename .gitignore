@@ -46,10 +46,8 @@ schematic/
 CameVisionMono*.pdf
 CameVision Single*.pdf
 
-# Bundled host runtimes (offline zip only)
-host/python/
+# Host caches — keep bundled Python so clone works without system Python
 host/tmp/
-host/linux/python-*.tar.gz
 host/linux/py-tmp/
 host/linux/pt-tmp/
 host/DriverAssitant_v5.14.zip

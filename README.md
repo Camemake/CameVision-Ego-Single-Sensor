@@ -18,8 +18,9 @@ Do not flash gen1 serial `0558fa189447bc45`.
 Same path on a blank eMMC and on a board that already has images.
 
 1. USB-C data cable. Hold **BOOT**, tap **RESET**, keep BOOT held.
-2. Windows: `CameVision-Single.cmd`. Linux: `CameVision-Single.sh`.
-   Or: `python tools/cv_single_studio.py`
+2. Windows: double-click `CameVision-Single.exe` (bundled Python, no system
+   install). Linux: `CameVision-Single` or `CameVision-Single.sh`.
+   Fallback: `CameVision-Single.cmd` or `python tools/cv_single_studio.py`
 3. Installer at http://127.0.0.1:8765/tool.html
 4. **USB** — install the Rockchip driver (`host/DriverAssitant_v5.14`).
 5. **Package** — pick **CameVision Single · SC233HGS** or **CameVision Mono · MIRA220**.
@@ -37,7 +38,9 @@ python tools/cv_single_overlay_deploy_am.py
 python tools/cv_single_page.py
 ```
 
-Need: Python 3.10+, `git lfs pull` after clone (oem / rootfs / userdata).
+Need: `git lfs pull` after clone (oem / rootfs / userdata). Windows
+needs no system Python — `host/python` ships in the tree. Linux extracts
+`host/linux/python-*.tar.gz` on first run.
 Rockchip USB: Windows driver in `host/DriverAssitant_v5.14`, Linux udev in
 `host/linux/`. `upgrade_tool db` only **once** per Maskrom session.
 
@@ -47,8 +50,11 @@ Board nets, GPIOs, I2C/SPI: [`HARDWARE.md`](HARDWARE.md).
 ## Layout
 
 ```
-CameVision-Single.cmd / .sh     Offline installer launcher
+CameVision-Single.exe           Windows installer (bundled Python)
+CameVision-Single / .sh         Linux installer
+CameVision-Single.cmd           Windows cmd fallback
 tools/                          Flash, overlay, live, IMU, IQ, modules
+  installer/                    C# source for CameVision-Single.exe
   cv_single_studio.py           Installer HTTP :8765
   cv_single_flash.py            Maskrom write, then overlay
   cv_single_overlay_deploy.py   SC233 ADB overlay
@@ -63,6 +69,8 @@ restore/known-good-20260903-single-camera/  SC233 boot FIT + overlay
 restore/release-1.0-mono-mira220-20261014/  Mono boot FIT + overlay
 docs/tool.html                  Installer UI
 host/                           adb, upgrade_tool, Rockchip USB driver
+host/python                     Windows Python 3.12 embed
+host/linux/python-*.tar.gz      Linux Python (x86_64 / aarch64)
 ```
 
 ## Rebuild / pack

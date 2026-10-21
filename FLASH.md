@@ -16,7 +16,7 @@ Shared SPL / oem / rootfs: `restore/known-good-20260819-camera-adb`.
 
 - The matching board (Single SC233 or Mono AM / MIRA220)
 - USB-C cable that carries data
-- Python 3.10+ (or `host/python` in an offline pack)
+- Bundled Python (`host/python` on Windows, `host/linux/python-*.tar.gz` on Linux). No system Python required.
 - Rockchip USB: `host/DriverAssitant_v5.14` (Windows) or `host/linux/` udev
 - `git lfs pull` so `oem_noko.img`, `rootfs_bootstable.img`, `userdata.img` are real files
 
@@ -32,7 +32,9 @@ python tools/cv_single_flash.py --package camevision-single
 python tools/cv_single_flash.py --package camevision-mono
 ```
 
-Or the installer: `python tools/cv_single_studio.py` → http://127.0.0.1:8765/tool.html
+Or the installer: double-click `CameVision-Single.exe` (Windows) or run
+`CameVision-Single` (Linux) → http://127.0.0.1:8765/tool.html.
+Fallback: `python tools/cv_single_studio.py`.
 
 Release BOOT when the write finishes and the board starts.
 

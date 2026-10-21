@@ -61,6 +61,8 @@ TOOL_FILES = (
     "S11hwclock",
     "camemake-logo.png",
     "CameVision-Single.sh",
+    "installer/CameVisionSingleSetup.cs",
+    "installer/build.cmd",
 )
 
 SKIP_PACK = {"schematic", "schematic-ego", "tmp", "py-tmp", "pt-tmp"}
@@ -68,8 +70,8 @@ SKIP_PACK = {"schematic", "schematic-ego", "tmp", "py-tmp", "pt-tmp"}
 README = """CameVision Single · offline installer
 =====================================
 
-Windows:  double-click CameVision-Single.cmd
-Linux:    open CameVision-Single.sh
+Windows:  double-click CameVision-Single.exe
+Linux:    open CameVision-Single or CameVision-Single.sh
 
 The Camemake window installs Python, ADB, the flash tool, and USB access.
 
@@ -247,11 +249,11 @@ def main() -> int:
     if py_src.is_dir() and (py_src / "python.exe").is_file():
         copy_tree(py_src, host / "python")
 
-    for name in ("CameVision-Single.cmd", "CameVision-Single.sh"):
+    for name in ("CameVision-Single.exe", "CameVision-Single.cmd", "CameVision-Single.sh", "CameVision-Single"):
         src = ROOT / name
         if src.is_file():
             copy_file(src, OUT / name)
-            if name.endswith(".sh"):
+            if name in ("CameVision-Single.sh", "CameVision-Single"):
                 os.chmod(OUT / name, 0o755)
     (OUT / "README.txt").write_text(README, encoding="utf-8")
     (OUT / "VERSION").write_text("CameVision-Single-Offline 0.1\n", encoding="ascii")
@@ -371,6 +373,8 @@ def _verify_pack(out: Path) -> None:
             raise SystemExit("CameVision Single package is not ready: " + ", ".join(pkgs[0]["missing"]))
         if not (out / "CameVision-Single.cmd").is_file():
             raise SystemExit("pack missing CameVision-Single.cmd")
+        if not (out / "CameVision-Single.exe").is_file():
+            raise SystemExit("pack missing CameVision-Single.exe")
         print(
             f"PACK_OK boot={img} sha={hashlib.sha256(raw).hexdigest()[:16]} "
             f"imgs={len(imgs)}",

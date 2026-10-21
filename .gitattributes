@@ -1,3 +1,7 @@
+CameVision-Single text eol=lf
+CameVision-Single.sh text eol=lf
+*.sh text eol=lf
+
 # Git LFS — oem / rootfs / userdata exceed GitHub's 100 MB blob limit
 restore/known-good-20260819-camera-adb/oem_noko.img filter=lfs diff=lfs merge=lfs -text
 restore/known-good-20260819-camera-adb/rootfs_bootstable.img filter=lfs diff=lfs merge=lfs -text
