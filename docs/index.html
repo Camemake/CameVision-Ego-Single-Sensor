@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+  <meta charset="utf-8">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CameVision Ego Single Sensor · CV-EGO01-SS · Camemake</title>
+  <meta name="description" content="CameVision Ego Single Sensor: one global-shutter camera and one IMU. Same sensors as CameVision Ego — SC233HGS, OG02C10, MIRA220, AR0235, OX05B1S, Kaimou GS2.3. RV1126B NPU.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>Single Sensor &middot; 1 IMU</span>
+      </div>
+      <nav>
+        <a class="active" href="index.html">Product</a>
+        <a href="start.html">Get started</a>
+        <a href="flash.html">Flash</a>
+        <a href="hardware.html">Hardware</a>
+        <a href="mechanical.html">Mechanical</a>
+        <a href="optics.html">Optics</a>
+        <a href="software.html">Software</a>
+        <a href="datasheet.html">Datasheet</a>
+      </nav>
+      <a class="buy" href="mailto:sales@camemake.com">Contact</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">CV-EGO01-SS · one camera · one IMU</div>
+      <h1>CameVision Ego Single Sensor</h1>
+      <p class="lead">The one-camera board in the CameVision Ego family. Same global-shutter sensor options as Ego, same RV1126B NPU, USB-C, Wi-Fi 6, BLE, eMMC and battery pads — one imager and one IMU instead of a stereo pair.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="mailto:sales@camemake.com">Contact sales</a>
+        <a class="btn" href="start.html">Get started</a>
+        <a class="btn" href="datasheet.html">Datasheet</a>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>This board</h2>
+      <div class="grid">
+        <div class="card"><strong>SKU</strong>CV-EGO01-SS-SC · SS-OV · SS-AM · SS-AR · SS-OX · SS-GS</div>
+        <div class="card"><strong>Camera</strong>1 × global shutter. SC233HGS · OG02C10 · MIRA220 · AR0235 colour · AR0235 mono · OX05B1S · Kaimou GS2.3. 4-lane MIPI. <a href="datasheet.html">Datasheet</a></div>
+        <div class="card"><strong>IMU</strong>LSM6DSVQTR ×1, 16-bit. ST typical 60 µg/√Hz · 2.8 mdps/√Hz. One SPI bus beside the camera. <a href="hardware.html">Precision</a></div>
+        <div class="card"><strong>Compute</strong>RV1126B · NPU · 1 GB DDR4 · 16 GB eMMC</div>
+        <div class="card"><strong>I/O</strong>USB-C ADB · Wi-Fi 6 + BLE (VS6621) · microSD · RV-3028 RTC · BQ24072 charge</div>
+        <div class="card"><strong>Versus Ego</strong>Ego is two cameras and two IMUs, hardware-synced. This board is one camera and one IMU. Same sensors, same SoC, same flash map.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Global shutter on this platform</h2>
+      <p>Ego Single Sensor is a one-camera MIPI board. One CSI PHY, one imager, one IMU. Shop sensors on this PCB are the same as CameVision Ego: SC233HGS, OG02C10, MIRA220, AR0235 (colour and mono), OX05B1S and Kaimou GS2.3. Other global-shutter imagers from the Camemake catalogue fit the same one-camera footprint: SmartSens, OmniVision, onsemi, Kaimou and Sony Pregius. Colour, mono and NIR.</p>
+      <p>Every option on this platform is a global-shutter MIPI module. Address on the camera bus is 0x30. CAM0 is I2C3. There is no CAM1, no stereo baseline, and no second IMU.</p>
+      <table>
+        <tr><th>Class</th><th>Optical / pixels</th><th>Typical sensors</th><th>On this board</th></tr>
+        <tr><td>VGA / 0.3–0.4 MP</td><td>1/6″–1/4″ · 640×480</td><td>SC035HGS, IMX287</td><td>Compact colour or mono</td></tr>
+        <tr><td>~1 MP</td><td>1/4″–1/3″ · 1280×800 class</td><td>SC135HGS, OV9281 / OV9282, OG01A1B, AR0144</td><td>Mono machine vision, RGB-IR</td></tr>
+        <tr><td>~1.3–1.6 MP</td><td>1/3″–1/2.9″</td><td>SC132GS, AR0134 / AR0135, IMX296, IMX273</td><td>Industrial mono or colour</td></tr>
+        <tr><td>2–2.3 MP</td><td>1/2.8 in – 1/2.3 in</td><td>SC233HGS (SS-SC), OG02C10 (SS-OV), MIRA220 (SS-AM), AR0235 colour/mono (SS-AR), Kaimou GS2.3 (SS-GS)</td><td>Shop sensors</td></tr>
+        <tr><td>5 MP</td><td>1/2.53 in</td><td>OX05B1S (SS-OX)</td><td>Shop sensor</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Sensor families</h2>
+      <table>
+        <tr><th>Maker</th><th>Lines</th><th>Examples in the Camemake catalogue</th><th>Notes</th></tr>
+        <tr>
+          <td>SmartSens</td>
+          <td>HGS / GS / AT</td>
+          <td>SC035HGS, SC135HGS, SC221HGS, SC231HGS, SC233HGS, SC235HGS, SC430HGS, SC535HGS</td>
+          <td>CV-EGO01-SS-SC is one SC233HGS colour. HGS is the high-speed GS line.</td>
+        </tr>
+        <tr>
+          <td>OmniVision</td>
+          <td>OG / OV / OX</td>
+          <td>OG02C10, OX05B1S, OV9281, OV9282, OV2311, OG01A1B, OG02B10, OG05B1B, OX03C10</td>
+          <td>CV-EGO01-SS-OV is one OG02C10. CV-EGO01-SS-OX is one OX05B1S (Nyxel / PureCel Plus-S, 2592×1944).</td>
+        </tr>
+        <tr>
+          <td>onsemi</td>
+          <td>AR / PYTHON</td>
+          <td>AR0235, AR0134, AR0135, AR0144, AR0234, NOIP1SN1300A</td>
+          <td>CV-EGO01-SS-AR is one AR0235, colour or mono. Hyperlux SG, 1920×1200, 2.8 µm.</td>
+        </tr>
+        <tr>
+          <td>Sony</td>
+          <td>Pregius</td>
+          <td>IMX287, IMX296, IMX273, IMX392, IMX265, IMX250, IMX252</td>
+          <td>Higher-grade colour or mono. Pregius is Sony’s GS machine-vision line.</td>
+        </tr>
+        <tr>
+          <td>Camemake</td>
+          <td>AM</td>
+          <td>MIRA220 (AM220)</td>
+          <td>CV-EGO01-SS-AM. One 1600 × 1400, 2.80 um, BSI global.</td>
+        </tr>
+        <tr>
+          <td>Kaimou</td>
+          <td>GS</td>
+          <td>GS2.3</td>
+          <td>CV-EGO01-SS-GS. One 1920 × 1200, 3.0 µm, 1/2.6 in, mono or RGB, 120 fps.</td>
+        </tr>
+      </table>
+      <p>Colour Bayer, mono and NIR are variants of the same footprint. Catalogue: <a href="https://www.camemake.eu">camemake.eu</a>. Stereo (two cameras, two IMUs) is <a href="https://camemake.github.io/CameVision-Ego/">CameVision Ego</a>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>On the camera</h2>
+      <p>On the board: one-pane live page and IMU HUD. Open from the host with <code>python tools/cv_single_page.py</code>.</p>
+      <p>Maskrom kits in this tree today: <strong>SC233HGS</strong> and <strong>MIRA220</strong>. The other shop sensors use the same PCB and module footprint.</p>
+      <p><a href="datasheet.html">Datasheet</a> · <a href="start.html">Get started</a> · <a href="flash.html">Flash</a> · <a href="hardware.html">Pinmux</a> · <a href="mechanical.html">Mechanical</a> · <a href="optics.html">Optics</a> · <a href="software.html">Software</a></p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div>
+      <div>
+        <a href="https://www.camemake.eu/robotic-solutions">Robotic solutions</a> ·
+        <a href="mailto:sales@camemake.com">sales@camemake.com</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

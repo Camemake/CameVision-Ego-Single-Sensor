@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hardware · CameVision Single · Camemake</title>
-  <meta name="description" content="CameVision Single pinmux: one SC233HGS, one IMU, Wi-Fi, storage, power.">
+  <title>Hardware · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision Ego Single Sensor pinmux: one camera, one IMU. Same sensors as Ego.">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="icon" href="assets/camemake-logo.png">
 </head>
@@ -13,20 +13,20 @@
     <div class="brand">
       <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
       <div class="titles">
-        <b>CameVision Single</b>
-        <span>Camemake monocular &middot; 1 IMU</span>
+        <b>CameVision Ego</b>
+        <span>Single Sensor &middot; 1 IMU</span>
       </div>
       <nav>
         <a href="index.html">Product</a>
         <a href="start.html">Get started</a>
-        <a href="tool.html">Offline tool</a>
+        <a href="flash.html">Flash</a>
         <a class="active" href="hardware.html">Hardware</a>
         <a href="mechanical.html">Mechanical</a>
         <a href="optics.html">Optics</a>
         <a href="software.html">Software</a>
         <a href="datasheet.html">Datasheet</a>
       </nav>
-      <a class="buy" href="http://127.0.0.1:8081/">Live page</a>
+      <a class="buy" href="mailto:sales@camemake.com">Contact</a>
     </div>
   </header>
 
@@ -34,7 +34,7 @@
     <div class="wrap">
       <div class="kicker">Same RV1126B platform as Ego</div>
       <h1>Hardware</h1>
-      <p class="lead">One CSI camera and one IMU. Source: <code>device-tree/rv1126b-camevision-single.dts</code>.</p>
+      <p class="lead">One CSI camera and one IMU. Same shop sensors as CameVision Ego. Source: <code>device-tree/rv1126b-camevision-single.dts</code>.</p>
     </div>
   </div>
 
@@ -46,8 +46,8 @@
         <tr><td>SoC</td><td>RV1126B</td></tr>
         <tr><td>DDR4</td><td>K4A8G165WG 16-bit 1 GB</td></tr>
         <tr><td>eMMC</td><td>BWCTAK611G16G 16 GB</td></tr>
-        <tr><td>Camera</td><td>1 × SC233HGS, I2C3 <code>@0x30</code>, chip id <code>0xcb61</code></td></tr>
-        <tr><td>IMU</td><td>1 × LSM6DSVQTR on SPI1</td></tr>
+        <tr><td>Camera</td><td>1 × global shutter, I2C3 <code>@0x30</code>. Shop: SC233HGS · OG02C10 · MIRA220 · AR0235 colour/mono · OX05B1S · Kaimou GS2.3</td></tr>
+        <tr><td>IMU</td><td>1 × LSM6DSVQTR (SPI1 on SC233 · SPI0 on MIRA220)</td></tr>
         <tr><td>PMIC</td><td>RK801-2, I2C0 0x27</td></tr>
         <tr><td>RTC</td><td>RV-3028-C7, I2C2 0x52</td></tr>
         <tr><td>Wi-Fi / BT</td><td>VS6621 on SDMMC1 + UART2</td></tr>
@@ -60,7 +60,7 @@
   <section>
     <div class="wrap">
       <h2>Camera</h2>
-      <p class="callout">Mono pipe only. No CAM1, no FSYNC / EFSYNC, no stereo baseline.</p>
+      <p class="callout">One camera only. Same sensor options as Ego. No CAM1, no stereo FSYNC pair, no second IMU.</p>
       <table>
         <tr><th>Net</th><th>Pad / GPIO</th><th>Function</th></tr>
         <tr><td>CAM0 MIPI</td><td>CSI RX0, 4-lane + CLK</td><td>SC233HGS → ISP <code>/dev/video13</code></td></tr>
@@ -123,7 +123,7 @@
 
   <footer class="foot">
     <div class="wrap foot-row">
-      <div>© Camemake · CameVision Single</div>
+      <div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div>
       <div>device-tree/rv1126b-camevision-single.dts</div>
     </div>
   </footer>

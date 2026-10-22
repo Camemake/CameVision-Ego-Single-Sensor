@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+  <meta charset="utf-8">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flash from Maskrom · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="Maskrom flash for CameVision Ego Single Sensor: USB, package, ADB. One camera, one IMU.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>Single Sensor &middot; 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">Product</a>
+        <a href="start.html">Get started</a>
+        <a class="active" href="flash.html">Flash</a>
+        <a href="hardware.html">Hardware</a>
+        <a href="mechanical.html">Mechanical</a>
+        <a href="optics.html">Optics</a>
+        <a href="software.html">Software</a>
+        <a href="datasheet.html">Datasheet</a>
+      </nav>
+      <a class="buy" href="mailto:sales@camemake.com">Contact</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">Maskrom · empty board or already flashed</div>
+      <h1>Flash</h1>
+      <p class="lead">Hold BOOT, tap RESET, write every partition, then the overlay. USB stays ADB. One camera, one IMU.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap steps">
+      <article class="step">
+        <div class="step-num">USB</div>
+        <h2>Maskrom</h2>
+        <ol>
+          <li>Connect USB-C and power the board.</li>
+          <li>Install the USB driver (Windows: <code>host/DriverAssitant_v5.14</code>. Linux: <code>host/linux/99-camevision-rockusb.rules</code>).</li>
+          <li>Hold <strong>BOOT</strong>, tap <strong>RESET</strong>, keep BOOT held.</li>
+          <li>The port is Maskrom <code>2207:110f</code> or Loader. After reset it becomes ADB <code>2207:0006</code>.</li>
+        </ol>
+      </article>
+      <article class="step">
+        <div class="step-num">Package</div>
+        <h2>Install</h2>
+        <p>Writes loader, env, idblock, U-Boot, the selected sensor’s boot FIT, userdata, oem, rootfs, then that overlay over ADB.</p>
+        <pre>python tools/cv_single_flash.py --package camevision-single
+python tools/cv_single_flash.py --package camevision-mono</pre>
+        <p>Or double-click <code>CameVision-Single.exe</code> (bundled Python). Release BOOT when the board starts.</p>
+        <p>Shop sensors: SC233HGS, OG02C10, MIRA220, AR0235 (colour / mono), OX05B1S, Kaimou GS2.3. The two Maskrom kits in this tree are SC233HGS and AM / MIRA220.</p>
+        <p>Do not flash gen1 serial <code>0558fa189447bc45</code>.</p>
+      </article>
+      <article class="step">
+        <div class="step-num">ADB</div>
+        <h2>Open</h2>
+        <pre>python tools/cv_single_page.py</pre>
+        <p>Forwards the on-board live page and IMU HUD, then opens a browser.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Partition map</h2>
+      <p><code>upgrade_tool db</code> the 1 GB DDR loader once, then <code>wl</code> each LBA. Overlay is not a partition.</p>
+      <table>
+        <tr><th>LBA</th><th>Image</th><th>Role</th></tr>
+        <tr><td>loader (<code>db</code>)</td><td><code>rv1126b_spl_loader_k4a8g.bin</code></td><td>SPL for the fitted 1 GB DDR</td></tr>
+        <tr><td><code>0x0</code></td><td><code>env.img</code></td><td>U-Boot env</td></tr>
+        <tr><td><code>0x40</code></td><td><code>idblock.img</code></td><td>idblock</td></tr>
+        <tr><td><code>0x440</code></td><td><code>uboot.img</code></td><td>U-Boot</td></tr>
+        <tr><td><code>0x2440</code></td><td><code>camevision_boot.img</code> or <code>camevision_boot_mono.img</code></td><td>Kernel + DTB FIT — SC233HGS or AM / MIRA220</td></tr>
+        <tr><td><code>0x7C40</code></td><td><code>userdata.img</code></td><td>Skeleton, then overlay</td></tr>
+        <tr><td><code>0x207C40</code></td><td><code>oem_noko.img</code></td><td>rkaiq, IQ binaries, oem libs</td></tr>
+        <tr><td><code>0x607C40</code></td><td><code>rootfs_bootstable.img</code></td><td>Root filesystem</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Where the images live</h2>
+      <p>Two Maskrom kits stay separate. <strong>SC233HGS</strong> is <code>restore/known-good-20260903-single-camera</code> (boot <code>camevision_boot.img</code>). <strong>AM / MIRA220</strong> is <code>restore/release-1.0-mono-mira220-20261014</code> (boot <code>camevision_boot_mono.img</code>). Shared SPL / oem / rootfs: <code>restore/known-good-20260819-camera-adb</code>. Clone with Git LFS so the large images download.</p>
+      <p>Notes: <a href="https://github.com/Camemake/CameVision-Ego-Single-Sensor/blob/main/FLASH.md"><code>FLASH.md</code></a></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Overlay</h2>
+      <p>After ADB is up, the product is the overlay. Board already flashed: skip Maskrom, run the deploy for that sensor.</p>
+      <pre>python tools/cv_single_overlay_deploy.py
+python tools/cv_single_overlay_deploy_am.py</pre>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div>
+      <div>
+        <a href="https://github.com/Camemake/CameVision-Ego-Single-Sensor">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

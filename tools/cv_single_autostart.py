@@ -161,7 +161,7 @@ def install_linux() -> int:
     desktop.write_text(
         "[Desktop Entry]\n"
         "Type=Application\n"
-        "Name=CameVision Single\n"
+        "Name=CameVision Ego Single Sensor\n"
         f'Exec="{py}" "{script}" --daemon\n'
         "X-GNOME-Autostart-enabled=true\n",
         encoding="utf-8",

@@ -82,7 +82,7 @@ def packages() -> list[dict]:
     return [
         {
             "id": PKG_SC233,
-            "name": "CameVision Single · SC233HGS",
+            "name": "CameVision Ego Single Sensor · SC233HGS",
             "sensor": "SC233HGS",
             "parts": list(PACKAGE_PARTS),
             "ready": ready,
@@ -90,7 +90,7 @@ def packages() -> list[dict]:
         },
         {
             "id": PKG_AM,
-            "name": "CameVision Mono · MIRA220",
+            "name": "CameVision Ego Single Sensor · MIRA220",
             "sensor": "MIRA220",
             "parts": list(PACKAGE_PARTS),
             "ready": am_ready,

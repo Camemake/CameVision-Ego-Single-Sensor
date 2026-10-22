@@ -174,7 +174,7 @@ def gui() -> int:
     CARD = "#ffffff"
 
     root = tk.Tk()
-    root.title("CameVision Single · Camemake")
+    root.title("CameVision Ego Single Sensor · Camemake")
     root.configure(bg=BG)
     root.geometry("520x620")
     root.minsize(480, 560)
@@ -198,7 +198,7 @@ def gui() -> int:
             )
     titles = tk.Frame(header, bg=CARD)
     titles.pack(side="left", padx=8)
-    tk.Label(titles, text="CameVision Single", fg=INK, bg=CARD, font=("Segoe UI", 16, "bold")).pack(anchor="w")
+    tk.Label(titles, text="CameVision Ego Single Sensor", fg=INK, bg=CARD, font=("Segoe UI", 16, "bold")).pack(anchor="w")
     tk.Label(titles, text="Camemake installer", fg=CAME, bg=CARD, font=("Segoe UI", 11)).pack(anchor="w")
 
     body = tk.Frame(root, bg=BG)
@@ -295,7 +295,7 @@ def gui() -> int:
         threading.Thread(target=work, daemon=True).start()
 
     btn.configure(command=start)
-    tk.Label(body, text="© Camemake · CameVision Single", fg=MUTED, bg=BG, font=("Segoe UI", 9)).pack(anchor="w")
+    tk.Label(body, text="© Camemake · CameVision Ego Single Sensor", fg=MUTED, bg=BG, font=("Segoe UI", 9)).pack(anchor="w")
     _ = tkfont
     root.mainloop()
     return 0
@@ -317,7 +317,7 @@ def _gui_zenity() -> int:
         return code
     total = len(PACKS)
     proc = subprocess.Popen(
-        [zen, "--progress", "--title=CameVision Single", "--text=Camemake installer", "--percentage=0", "--auto-close"],
+        [zen, "--progress", "--title=CameVision Ego Single Sensor", "--text=Camemake installer", "--percentage=0", "--auto-close"],
         stdin=subprocess.PIPE,
         text=True,
     )

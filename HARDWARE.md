@@ -1,9 +1,9 @@
-# Hardware
+# Hardware — CameVision Ego Single Sensor
 
-CameVision one-camera boards. SoC is Rockchip RV1126B. USB gadget is ADB
-only on this product path.
+One-camera boards in the CameVision Ego family. Same sensor options as Ego.
+SoC is Rockchip RV1126B. USB gadget is ADB only on this product path.
 
-## CameVision Single — SC233HGS
+## SC233HGS (CV-EGO01-SS-SC)
 
 | Net | Use |
 |---|---|
@@ -15,7 +15,7 @@ only on this product path.
 | IQ | `sc233hgs_efference-sc233hgs_default.json` |
 | Clock | `clk_mipi0_out2io` on CAM_CLK0_OUT |
 
-## CameVision Mono — MIRA220 (CameVisionMono_OV V0.3)
+## MIRA220 (CV-EGO01-SS-AM, CameVisionMono_OV V0.3)
 
 | Net | SoC | Use |
 |---|---|---|

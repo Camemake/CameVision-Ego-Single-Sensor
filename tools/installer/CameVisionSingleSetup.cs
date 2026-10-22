@@ -49,7 +49,7 @@ namespace Camemake
         public SetupForm()
         {
             _root = FindRoot();
-            Text = "CameVision Single";
+            Text = "CameVision Ego Single Sensor";
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
@@ -88,7 +88,7 @@ namespace Camemake
 
             var title = new Label
             {
-                Text = "CameVision Single",
+                Text = "CameVision Ego Single Sensor",
                 Font = new Font("Segoe UI", 16f, FontStyle.Bold),
                 ForeColor = Ink,
                 BackColor = Card,
@@ -188,7 +188,7 @@ namespace Camemake
 
             var foot = new Label
             {
-                Text = "© Camemake  ·  Single / Mono",
+                Text = "© Camemake  ·  Ego Single Sensor",
                 Location = new Point(180, 556),
                 Size = new Size(312, 28),
                 ForeColor = Muted,

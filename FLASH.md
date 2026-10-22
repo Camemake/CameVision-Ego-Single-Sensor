@@ -1,7 +1,8 @@
-# Flash from Maskrom
+# Flash from Maskrom — CameVision Ego Single Sensor
 
 Empty board or a board that already has images. USB stays ADB
 (`2207:0006` after boot). Do not switch to a UVC webcam.
+One camera, one IMU. Same sensor options as CameVision Ego.
 
 ## Kits
 
@@ -14,7 +15,7 @@ Shared SPL / oem / rootfs: `restore/known-good-20260819-camera-adb`.
 
 ## What you need
 
-- The matching board (Single SC233 or Mono AM / MIRA220)
+- The matching board (SC233HGS or AM / MIRA220)
 - USB-C cable that carries data
 - Bundled Python (`host/python` on Windows, `host/linux/python-*.tar.gz` on Linux). No system Python required.
 - Rockchip USB: `host/DriverAssitant_v5.14` (Windows) or `host/linux/` udev

@@ -67,8 +67,8 @@ TOOL_FILES = (
 
 SKIP_PACK = {"schematic", "schematic-ego", "tmp", "py-tmp", "pt-tmp"}
 
-README = """CameVision Single · offline installer
-=====================================
+README = """CameVision Ego Single Sensor · offline installer
+===============================================
 
 Windows:  double-click CameVision-Single.exe
 Linux:    open CameVision-Single or CameVision-Single.sh
@@ -81,7 +81,7 @@ USB / Maskrom
   Install USB driver. Hold BOOT, tap RESET, keep BOOT held.
 
 Package
-  Select CameVision Single, or load a GitHub update / a zip.
+  Select CameVision Ego Single Sensor, or load a GitHub update / a zip.
   Install. Writes loader, env, idblock, U-Boot, boot,
   userdata, oem, rootfs, and the overlay.
   Release BOOT when the board starts.

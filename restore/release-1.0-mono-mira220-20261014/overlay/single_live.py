@@ -91,8 +91,8 @@ _load_native()
 shared: dict = {"cam0": None, "cam0_fps": 0.0, "jpg": b"", "jpg_t": 0.0}
 
 
-BRAND_NAME = "CameVision Mono" if AM else "CameVision Single"
-BRAND_SUB = "MIRA220 RGB · 1 IMU" if AM else "Camemake monocular · 1 IMU"
+BRAND_NAME = "CameVision Ego Single Sensor"
+BRAND_SUB = "MIRA220 RGB · 1 IMU" if AM else "Camemake · 1 sensor · 1 IMU"
 
 PAGE = (
     b"""<!doctype html>

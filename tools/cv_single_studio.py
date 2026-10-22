@@ -378,7 +378,7 @@ def main() -> int:
         raise SystemExit(f"missing docs at {DOCS}")
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     url = f"http://127.0.0.1:{port}/tool.html"
-    log(f"CameVision Single offline tool at {url}")
+    log(f"CameVision Ego Single Sensor offline tool at {url}")
     log(f"root {ROOT}")
     threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
