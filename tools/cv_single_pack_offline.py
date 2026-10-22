@@ -50,6 +50,8 @@ TOOL_FILES = (
     "cv_single_pack_offline.py",
     "single_live.py",
     "single_imu_hud.py",
+    "camevision_agent.py",
+    "camevision_ble.py",
     "camevision-single.sh",
     "camevision-aiq.sh",
     "camevision-wifi.sh",

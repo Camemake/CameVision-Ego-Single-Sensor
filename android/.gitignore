@@ -1,0 +1,9 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+gradle-8.9/
+gradle-8.9-bin.zip
+CameVision.apk

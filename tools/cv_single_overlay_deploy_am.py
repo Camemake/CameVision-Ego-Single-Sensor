@@ -128,8 +128,14 @@ def deploy(s: str, pylib: bool = True) -> None:
     tools = ROOT / "tools"
     files = [
         (tools / "single_live.py", "/userdata/single_live.py"),
+        (tools / "camevision-uvc-gadget.sh", "/userdata/camevision-uvc-gadget.sh"),
+        (tools / "camevision-uvc-start.sh", "/userdata/camevision-uvc-start.sh"),
+        (tools / "camevision-uvc-stop.sh", "/userdata/camevision-uvc-stop.sh"),
+        (tools / "camevision-uvc-bridge.py", "/userdata/camevision-uvc-bridge.py"),
         (tools / "libsingle_color.so", "/userdata/libsingle_color.so"),
         (tools / "single_imu_hud.py", "/userdata/single_imu_hud.py"),
+        (tools / "camevision_agent.py", "/userdata/camevision_agent.py"),
+        (tools / "camevision_ble.py", "/userdata/camevision_ble.py"),
         (tools / "camevision-single.sh", "/userdata/camevision-single.sh"),
         (tools / "S99camevision-single", "/userdata/S99camevision-single"),
         (tools / "S10mira220", "/userdata/S10mira220"),
@@ -181,12 +187,17 @@ def deploy(s: str, pylib: bool = True) -> None:
         "shell",
         "printf 'am\\n' > /userdata/camevision-am.on; "
         "sed -i 's/\\r$//' /userdata/single_live.py /userdata/single_imu_hud.py "
+        "/userdata/camevision_agent.py /userdata/camevision_ble.py "
         "/userdata/camevision-single.sh /userdata/S10mira220 "
         "/userdata/camevision-wifi.sh /userdata/camevision-hw.sh "
-        "/userdata/S99camevision-single /userdata/S11hwclock /userdata/S99camevision; "
+        "/userdata/S99camevision-single /userdata/S11hwclock /userdata/S99camevision "
+        "/userdata/camevision-uvc-gadget.sh /userdata/camevision-uvc-start.sh "
+        "/userdata/camevision-uvc-stop.sh /userdata/camevision-uvc-bridge.py; "
         "chmod 755 /userdata/camevision-single.sh /userdata/S10mira220 "
         "/userdata/camevision-wifi.sh /userdata/camevision-hw.sh "
-        "/userdata/S99camevision-single /userdata/S11hwclock /userdata/S99camevision; "
+        "/userdata/S99camevision-single /userdata/S11hwclock /userdata/S99camevision "
+        "/userdata/camevision-uvc-gadget.sh /userdata/camevision-uvc-start.sh "
+        "/userdata/camevision-uvc-stop.sh /userdata/camevision-uvc-bridge.py; "
         "rm -f /userdata/uvc-webcam.on /userdata/ego_stereo.py "
         "/userdata/ego_imu_hud.py /userdata/ego_cam_sync.py "
         "/userdata/camevision-stereo.sh /userdata/libego_stereo.so; "

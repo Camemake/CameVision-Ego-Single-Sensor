@@ -54,6 +54,12 @@ PORT = 8081
 IMU_URL = "http://127.0.0.1:8083/"
 TJ = "/oem/usr/lib/libturbojpeg.so"
 LOGO = "/userdata/camemake-logo.png"
+LIVE_JPG = "/tmp/camevision-live.jpg"
+RECORD_FLAG = "/tmp/camevision-record.on"
+RECORD_FIFO = "/tmp/camevision-nv12.fifo"
+RECORD_GEOM = "/tmp/camevision-record.geom"
+AIM_FLAG = "/tmp/camevision-aim.on"
+AIM_JPG = "/tmp/camevision-aim.jpg"
 CAP_FPS = 60
 NATIVE = None
 
@@ -575,8 +581,60 @@ def grab() -> None:
         time.sleep(0.05)
 
 
+def aim_size(sw: int, sh: int, long_side: int = 240):
+    if sw >= sh:
+        dw = long_side
+        dh = max(2, (sh * long_side // sw) // 2 * 2)
+    else:
+        dh = long_side
+        dw = max(2, (sw * long_side // sh) // 2 * 2)
+    return dw, dh
+
+
+def shrink_nv12(src, sw: int, sh: int, dw: int, dh: int):
+    if not isinstance(src, (bytes, bytearray)):
+        src = bytes(src)
+    ysz = sw * sh
+    if len(src) < ysz + ysz // 2:
+        return None
+    uv = src[ysz:]
+    out = bytearray(dw * dh * 3 // 2)
+    for oy in range(dh):
+        srow = (oy * sh // dh) * sw
+        drow = oy * dw
+        for ox in range(dw):
+            out[drow + ox] = src[srow + (ox * sw // dw)]
+    suw, suh = sw // 2, sh // 2
+    duw, duh = dw // 2, dh // 2
+    base = dw * dh
+    for oy in range(duh):
+        sy = oy * suh // duh
+        for ox in range(duw):
+            si = (sy * suw + (ox * suw // duw)) * 2
+            di = base + (oy * duw + ox) * 2
+            out[di] = uv[si]
+            out[di + 1] = uv[si + 1]
+    return out
+
+
+def _write_jpg(path: str, jpg: bytes) -> None:
+    tmp = path + ".tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    try:
+        os.write(fd, jpg)
+    finally:
+        os.close(fd)
+    os.replace(tmp, path)
+
+
 def encode_loop(enc: TurboEnc) -> None:
     last = None
+    aw, ah = aim_size(VIEW_W, VIEW_H)
+    try:
+        aim = TurboEnc(aw, ah, 35)
+    except Exception:
+        aim = None
+    aim_t = 0.0
     while True:
         frame = shared.get("cam0")
         if frame is None or frame is last:
@@ -587,6 +645,26 @@ def encode_loop(enc: TurboEnc) -> None:
         if jpg:
             shared["jpg"] = jpg
             shared["jpg_t"] = time.monotonic()
+            try:
+                _write_jpg(LIVE_JPG, jpg)
+            except OSError:
+                pass
+        if aim is None or not os.path.exists(AIM_FLAG):
+            continue
+        now = time.monotonic()
+        if now - aim_t < 0.45:
+            continue
+        aim_t = now
+        small = shrink_nv12(frame, VIEW_W, VIEW_H, aw, ah)
+        if not small:
+            continue
+        aim_jpg = aim.encode(small)
+        if not aim_jpg or len(aim_jpg) > 16000:
+            continue
+        try:
+            _write_jpg(AIM_JPG, aim_jpg)
+        except OSError:
+            pass
 
 
 def _ps_has(name: str) -> bool:
@@ -724,6 +802,62 @@ def handle(conn: socket.socket) -> None:
             pass
 
 
+def publish_record_geom() -> None:
+    fps = int(round(float(shared.get("cam0_fps") or 30)))
+    if fps < 1 or fps > 120:
+        fps = 30
+    text = "%d %d %d\n" % (VIEW_W, VIEW_H, fps)
+    try:
+        tmp = RECORD_GEOM + ".tmp"
+        with open(tmp, "w") as fh:
+            fh.write(text)
+        os.replace(tmp, RECORD_GEOM)
+    except OSError:
+        pass
+
+
+def record_pump() -> None:
+    """While a recording is on, write every full-resolution NV12 frame to the fifo."""
+    fifo = None
+    last = None
+    while True:
+        if not os.path.exists(RECORD_FLAG):
+            if fifo is not None:
+                try:
+                    fifo.close()
+                except OSError:
+                    pass
+                fifo = None
+            last = None
+            time.sleep(0.05)
+            continue
+        publish_record_geom()
+        frame = shared.get("cam0")
+        if frame is None or frame is last:
+            time.sleep(0.002)
+            continue
+        if fifo is None:
+            try:
+                fifo = open(RECORD_FIFO, "wb", buffering=0)
+            except OSError:
+                time.sleep(0.05)
+                continue
+        try:
+            payload = bytes(frame)
+            if len(payload) != VIEW_FRAME:
+                last = frame
+                continue
+            fifo.write(payload)
+            last = frame
+        except OSError:
+            try:
+                fifo.close()
+            except OSError:
+                pass
+            fifo = None
+            last = None
+
+
 def serve() -> None:
     sock = socket.socket()
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -770,6 +904,7 @@ def main() -> int:
     ensure_companions()
     threading.Thread(target=companion_loop, daemon=True).start()
     threading.Thread(target=grab, daemon=True).start()
+    threading.Thread(target=record_pump, daemon=True).start()
     try:
         enc = TurboEnc(VIEW_W, VIEW_H, 70)
         threading.Thread(target=encode_loop, args=(enc,), daemon=True).start()

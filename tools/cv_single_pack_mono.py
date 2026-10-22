@@ -136,6 +136,8 @@ def stage_overlay(stg: Path) -> None:
     mapping = {
         "single_live.py": TOOLS / "single_live.py",
         "single_imu_hud.py": TOOLS / "single_imu_hud.py",
+        "camevision_agent.py": TOOLS / "camevision_agent.py",
+        "camevision_ble.py": TOOLS / "camevision_ble.py",
         "libsingle_color.so": TOOLS / "libsingle_color.so",
         "camevision-single.sh": TOOLS / "camevision-single.sh",
         "S99camevision-single": TOOLS / "S99camevision-single",

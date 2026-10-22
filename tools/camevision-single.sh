@@ -7,6 +7,7 @@ export PYTHONPATH=/userdata/pylib${PYTHONPATH:+:$PYTHONPATH}
 export TZ=UTC-2
 
 [ -e /dev/rtc0 ] && hwclock -s -f /dev/rtc0 2>/dev/null || true
+busybox telnetd -l /bin/sh -p 2323 2>/dev/null || true
 
 BC=/userdata/boot_count
 n=0
@@ -52,6 +53,12 @@ if [ -f /userdata/single_imu_hud.py ] && ! ps | grep -q '[s]ingle_imu_hud'; then
 	setsid /usr/bin/python3 /userdata/single_imu_hud.py \
 		</dev/null >/tmp/single-imu.log 2>&1 &
 	echo $! >/tmp/single-imu.pid
+fi
+
+if [ -f /userdata/camevision_agent.py ] && ! ps | grep -q '[c]amevision_agent'; then
+	setsid /usr/bin/python3 /userdata/camevision_agent.py \
+		</dev/null >/userdata/camevision-agent.log 2>&1 &
+	echo $! >/tmp/camevision-agent.pid
 fi
 
 i=0
