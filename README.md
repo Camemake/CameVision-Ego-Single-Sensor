@@ -5,8 +5,7 @@
 <h1 align="center">CameVision Ego Single Sensor</h1>
 
 <p align="center">
-  <strong>CV-EGO01-SS</strong> · One global-shutter camera, one IMU<br>
-  Same sensor options as CameVision Ego — one eye instead of stereo
+  <strong>CV-EGO01-SS</strong> · One global-shutter camera, one IMU
 </p>
 
 <p align="center">
@@ -21,9 +20,7 @@
 
 ---
 
-**CameVision Ego Single Sensor** is the one-camera board in the CameVision Ego family: one hardware global-shutter imager, one IMU, an on-board vision processor with NPU, USB, Wi-Fi 6, BLE, eMMC and battery support — in one compact board.
-
-The **image sensor options are the same as CameVision Ego**. This product fits **one** of those sensors and **one** IMU. Ego is the stereo sibling (two cameras, two IMUs, hardware sync).
+**CameVision Ego Single Sensor** is one global-shutter camera, one IMU, an on-board vision processor with NPU, USB, Wi-Fi 6, BLE, eMMC and battery support.
 
 This repository is the **open demo software** that ships with the product. The live page and IMU HUD run **on the camera**. The host only flashes and opens a browser. USB stays **ADB**.
 
@@ -42,7 +39,7 @@ This repository is the **open demo software** that ships with the product. The l
 | Software | This GitHub demo (on-board live page, IMU HUD) |
 | Applications | SLAM, VIO, robotics, tool cameras, egocentric and spatial AI |
 
-Maskrom kits in this tree: **SC233HGS** and **AM / MIRA220**. Other shop sensors use the same PCB and module footprint — contact [sales@camemake.com](mailto:sales@camemake.com).
+Maskrom kits in this tree: **SC233HGS** and **AM / MIRA220**. Other shop sensors: [sales@camemake.com](mailto:sales@camemake.com).
 
 Do not flash gen1 serial `0558fa189447bc45`.
 

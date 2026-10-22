@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hardware · CameVision Ego Single Sensor · Camemake</title>
-  <meta name="description" content="CameVision Ego Single Sensor pinmux: one camera, one IMU. Same sensors as Ego.">
+  <meta name="description" content="CameVision Ego Single Sensor pinmux: one camera, one IMU.">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="icon" href="assets/camemake-logo.png">
 </head>
@@ -32,9 +32,9 @@
 
   <div class="hero">
     <div class="wrap">
-      <div class="kicker">Same RV1126B platform as Ego</div>
+      <div class="kicker">RV1126B</div>
       <h1>Hardware</h1>
-      <p class="lead">One CSI camera and one IMU. Same shop sensors as CameVision Ego. Source: <code>device-tree/rv1126b-camevision-single.dts</code>.</p>
+      <p class="lead">One camera and one IMU. Source: <code>device-tree/rv1126b-camevision-single.dts</code>.</p>
     </div>
   </div>
 
@@ -60,7 +60,7 @@
   <section>
     <div class="wrap">
       <h2>Camera</h2>
-      <p class="callout">One camera only. Same sensor options as Ego. No CAM1, no stereo FSYNC pair, no second IMU.</p>
+      <p class="callout">CAM0 only.</p>
       <table>
         <tr><th>Net</th><th>Pad / GPIO</th><th>Function</th></tr>
         <tr><td>CAM0 MIPI</td><td>CSI RX0, 4-lane + CLK</td><td>SC233HGS → ISP <code>/dev/video13</code></td></tr>

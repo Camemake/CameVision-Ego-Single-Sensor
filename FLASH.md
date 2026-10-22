@@ -2,7 +2,6 @@
 
 Empty board or a board that already has images. USB stays ADB
 (`2207:0006` after boot). Do not switch to a UVC webcam.
-One camera, one IMU. Same sensor options as CameVision Ego.
 
 ## Kits
 

@@ -1,6 +1,5 @@
 # Hardware — CameVision Ego Single Sensor
 
-One-camera boards in the CameVision Ego family. Same sensor options as Ego.
 SoC is Rockchip RV1126B. USB gadget is ADB only on this product path.
 
 ## SC233HGS (CV-EGO01-SS-SC)

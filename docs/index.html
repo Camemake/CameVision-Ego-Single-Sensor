@@ -5,7 +5,7 @@
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CameVision Ego Single Sensor · CV-EGO01-SS · Camemake</title>
-  <meta name="description" content="CameVision Ego Single Sensor: one global-shutter camera and one IMU. Same sensors as CameVision Ego — SC233HGS, OG02C10, MIRA220, AR0235, OX05B1S, Kaimou GS2.3. RV1126B NPU.">
+  <meta name="description" content="CameVision Ego Single Sensor: one global-shutter camera and one IMU. SC233HGS, OG02C10, MIRA220, AR0235, OX05B1S, Kaimou GS2.3. RV1126B NPU.">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="icon" href="assets/camemake-logo.png">
 </head>
@@ -35,7 +35,7 @@
     <div class="wrap">
       <div class="kicker">CV-EGO01-SS · one camera · one IMU</div>
       <h1>CameVision Ego Single Sensor</h1>
-      <p class="lead">The one-camera board in the CameVision Ego family. Same global-shutter sensor options as Ego, same RV1126B NPU, USB-C, Wi-Fi 6, BLE, eMMC and battery pads — one imager and one IMU instead of a stereo pair.</p>
+      <p class="lead">One global-shutter camera and one IMU on one board. On-board NPU, USB-C, Wi-Fi 6, BLE, eMMC and battery pads.</p>
       <div class="cta">
         <a class="btn btn-primary" href="mailto:sales@camemake.com">Contact sales</a>
         <a class="btn" href="start.html">Get started</a>
@@ -53,7 +53,6 @@
         <div class="card"><strong>IMU</strong>LSM6DSVQTR ×1, 16-bit. ST typical 60 µg/√Hz · 2.8 mdps/√Hz. One SPI bus beside the camera. <a href="hardware.html">Precision</a></div>
         <div class="card"><strong>Compute</strong>RV1126B · NPU · 1 GB DDR4 · 16 GB eMMC</div>
         <div class="card"><strong>I/O</strong>USB-C ADB · Wi-Fi 6 + BLE (VS6621) · microSD · RV-3028 RTC · BQ24072 charge</div>
-        <div class="card"><strong>Versus Ego</strong>Ego is two cameras and two IMUs, hardware-synced. This board is one camera and one IMU. Same sensors, same SoC, same flash map.</div>
       </div>
     </div>
   </section>
@@ -61,8 +60,8 @@
   <section>
     <div class="wrap">
       <h2>Global shutter on this platform</h2>
-      <p>Ego Single Sensor is a one-camera MIPI board. One CSI PHY, one imager, one IMU. Shop sensors on this PCB are the same as CameVision Ego: SC233HGS, OG02C10, MIRA220, AR0235 (colour and mono), OX05B1S and Kaimou GS2.3. Other global-shutter imagers from the Camemake catalogue fit the same one-camera footprint: SmartSens, OmniVision, onsemi, Kaimou and Sony Pregius. Colour, mono and NIR.</p>
-      <p>Every option on this platform is a global-shutter MIPI module. Address on the camera bus is 0x30. CAM0 is I2C3. There is no CAM1, no stereo baseline, and no second IMU.</p>
+      <p>Shop sensors: SC233HGS, OG02C10, MIRA220, AR0235 (colour and mono), OX05B1S and Kaimou GS2.3. Other global-shutter imagers from the Camemake catalogue: SmartSens, OmniVision, onsemi, Kaimou and Sony Pregius. Colour, mono and NIR.</p>
+      <p>Global-shutter MIPI module. Address 0x30. CAM0 is I2C3.</p>
       <table>
         <tr><th>Class</th><th>Optical / pixels</th><th>Typical sensors</th><th>On this board</th></tr>
         <tr><td>VGA / 0.3–0.4 MP</td><td>1/6″–1/4″ · 640×480</td><td>SC035HGS, IMX287</td><td>Compact colour or mono</td></tr>
@@ -116,7 +115,7 @@
           <td>CV-EGO01-SS-GS. One 1920 × 1200, 3.0 µm, 1/2.6 in, mono or RGB, 120 fps.</td>
         </tr>
       </table>
-      <p>Colour Bayer, mono and NIR are variants of the same footprint. Catalogue: <a href="https://www.camemake.eu">camemake.eu</a>. Stereo (two cameras, two IMUs) is <a href="https://camemake.github.io/CameVision-Ego/">CameVision Ego</a>.</p>
+      <p>Colour Bayer, mono and NIR. Catalogue: <a href="https://www.camemake.eu">camemake.eu</a>.</p>
     </div>
   </section>
 
@@ -124,7 +123,7 @@
     <div class="wrap">
       <h2>On the camera</h2>
       <p>On the board: one-pane live page and IMU HUD. Open from the host with <code>python tools/cv_single_page.py</code>.</p>
-      <p>Maskrom kits in this tree today: <strong>SC233HGS</strong> and <strong>MIRA220</strong>. The other shop sensors use the same PCB and module footprint.</p>
+      <p>Maskrom kits in this tree: <strong>SC233HGS</strong> and <strong>MIRA220</strong>.</p>
       <p><a href="datasheet.html">Datasheet</a> · <a href="start.html">Get started</a> · <a href="flash.html">Flash</a> · <a href="hardware.html">Pinmux</a> · <a href="mechanical.html">Mechanical</a> · <a href="optics.html">Optics</a> · <a href="software.html">Software</a></p>
     </div>
   </section>
