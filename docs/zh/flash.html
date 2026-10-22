@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>烧录 · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision Ego Single Sensor Maskrom 烧录。">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="icon" href="../assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="../assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>单传感器 · 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">产品</a>
+        <a href="start.html">入门</a>
+        <a class="active" href="flash.html">烧录</a>
+        <a href="hardware.html">硬件</a>
+        <a href="mechanical.html">结构</a>
+        <a href="optics.html">光学</a>
+        <a href="software.html">软件</a>
+        <a href="datasheet.html">规格书</a>
+      </nav>
+      <div class="lang"><a href="../flash.html">EN</a><a class="on" href="flash.html">中文</a></div>
+      <a class="buy" href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">购买</a>
+    </div>
+  </header>
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">Maskrom · 空板或已有镜像</div>
+      <h1>烧录</h1>
+      <p class="lead">按住 BOOT，点按 RESET，写入全部分区，再写 overlay。USB 保持 ADB。</p>
+    </div>
+  </div>
+  <section>
+    <div class="wrap steps">
+      <article class="step">
+        <div class="step-num">USB</div>
+        <h2>Maskrom</h2>
+        <ol>
+          <li>接上 USB-C 并供电。</li>
+          <li>安装 USB 驱动（Windows：<code>host/DriverAssitant_v5.14</code>。Linux：<code>host/linux/99-camevision-rockusb.rules</code>）。</li>
+          <li>按住 <strong>BOOT</strong>，点按 <strong>RESET</strong>，继续按住 BOOT。</li>
+          <li>端口为 Maskrom <code>2207:110f</code> 或 Loader。复位后为 ADB <code>2207:0006</code>。</li>
+        </ol>
+      </article>
+      <article class="step">
+        <div class="step-num">镜像</div>
+        <h2>安装</h2>
+        <pre>python tools/cv_single_flash.py --package camevision-single
+python tools/cv_single_flash.py --package camevision-mono</pre>
+        <p>或双击 <code>CameVision-Single.exe</code>。</p>
+        <p>本仓库套件：SC233HGS 与 AM / MIRA220。</p>
+      </article>
+      <article class="step">
+        <div class="step-num">ADB</div>
+        <h2>打开</h2>
+        <pre>python tools/cv_single_page.py</pre>
+      </article>
+    </div>
+  </section>
+  <footer class="foot"><div class="wrap foot-row"><div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div><div><a href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">商城</a></div></div></footer>
+</body>
+</html>

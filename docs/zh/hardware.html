@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>硬件 · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision Ego Single Sensor 引脚与器件。">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="icon" href="../assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="../assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>单传感器 · 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">产品</a>
+        <a href="start.html">入门</a>
+        <a href="flash.html">烧录</a>
+        <a class="active" href="hardware.html">硬件</a>
+        <a href="mechanical.html">结构</a>
+        <a href="optics.html">光学</a>
+        <a href="software.html">软件</a>
+        <a href="datasheet.html">规格书</a>
+      </nav>
+      <div class="lang"><a href="../hardware.html">EN</a><a class="on" href="hardware.html">中文</a></div>
+      <a class="buy" href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">购买</a>
+    </div>
+  </header>
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">RV1126B</div>
+      <h1>硬件</h1>
+      <p class="lead">一颗相机、一颗 IMU。源：<code>device-tree/rv1126b-camevision-single.dts</code>。</p>
+    </div>
+  </div>
+  <section>
+    <div class="wrap">
+      <h2>装机器件</h2>
+      <table>
+        <tr><th>模块</th><th>板上</th></tr>
+        <tr><td>SoC</td><td>RV1126B</td></tr>
+        <tr><td>相机</td><td>1 × 全局快门，I2C3 <code>@0x30</code></td></tr>
+        <tr><td>IMU</td><td>1 × LSM6DSVQTR</td></tr>
+        <tr><td>无线</td><td>VS6621 · Wi-Fi 6 + BLE</td></tr>
+        <tr><td>USB</td><td>USB-C ADB <code>2207:0006</code></td></tr>
+      </table>
+      <p class="callout">仅 CAM0。</p>
+    </div>
+  </section>
+  <footer class="foot"><div class="wrap foot-row"><div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div><div><a href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">商城</a></div></div></footer>
+</body>
+</html>

@@ -9,7 +9,11 @@
 </p>
 
 <p align="center">
+  <a href="https://www.camemake.eu/shop/camevision-ego-single-sensor-4547"><strong>Shop</strong></a>
+  ·
   <a href="https://camemake.github.io/CameVision-Ego-Single-Sensor/"><strong>Product page</strong></a>
+  ·
+  <a href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/"><strong>中文</strong></a>
   ·
   <a href="https://www.camemake.eu/robotic-solutions"><strong>Camemake robotic solutions</strong></a>
   ·
@@ -100,7 +104,9 @@ Read the family on **[Camemake robotic solutions](https://www.camemake.eu/roboti
 
 | Page | |
 |---|---|
+| [Shop](https://www.camemake.eu/shop/camevision-ego-single-sensor-4547) | Camemake shop · CV-EGO01-SS |
 | [Product page](https://camemake.github.io/CameVision-Ego-Single-Sensor/) | Public GitHub Pages site |
+| [中文](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/) | Chinese product pages |
 | [Get started](https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html) | USB, package, ADB |
 | [Flash](https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html) | Maskrom, partition map |
 | [Datasheet](https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html) | SKU table · IMU precision |

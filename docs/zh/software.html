@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>软件 · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision Ego Single Sensor 软件：现场页与 IMU HUD。">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="icon" href="../assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="../assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>单传感器 · 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">产品</a>
+        <a href="start.html">入门</a>
+        <a href="flash.html">烧录</a>
+        <a href="hardware.html">硬件</a>
+        <a href="mechanical.html">结构</a>
+        <a href="optics.html">光学</a>
+        <a class="active" href="software.html">软件</a>
+        <a href="datasheet.html">规格书</a>
+      </nav>
+      <div class="lang"><a href="../software.html">EN</a><a class="on" href="software.html">中文</a></div>
+      <a class="buy" href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">购买</a>
+    </div>
+  </header>
+  <div class="hero">
+    <div class="wrap">
+      <h1>软件</h1>
+      <p class="lead">单画面现场页与一颗 IMU HUD 在板上运行。主机负责烧录与 ADB 转发。</p>
+    </div>
+  </div>
+  <section>
+    <div class="wrap">
+      <table>
+        <tr><th>路径</th><th>内容</th></tr>
+        <tr><td><code>/</code></td><td>现场页 + IMU</td></tr>
+        <tr><td><code>/ov0</code></td><td>MJPEG</td></tr>
+        <tr><td><code>/stat</code></td><td>帧率 JSON</td></tr>
+        <tr><td><code>/imu</code></td><td>转发 :8083</td></tr>
+      </table>
+      <pre>python tools/cv_single_page.py</pre>
+    </div>
+  </section>
+  <footer class="foot"><div class="wrap foot-row"><div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div><div><a href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">商城</a></div></div></footer>
+</body>
+</html>

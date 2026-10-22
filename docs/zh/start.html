@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>入门 · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision Ego Single Sensor 入门：USB、镜像包、ADB。">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="icon" href="../assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="../assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>单传感器 · 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">产品</a>
+        <a class="active" href="start.html">入门</a>
+        <a href="flash.html">烧录</a>
+        <a href="hardware.html">硬件</a>
+        <a href="mechanical.html">结构</a>
+        <a href="optics.html">光学</a>
+        <a href="software.html">软件</a>
+        <a href="datasheet.html">规格书</a>
+      </nav>
+      <div class="lang"><a href="../start.html">EN</a><a class="on" href="start.html">中文</a></div>
+      <a class="buy" href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">购买</a>
+    </div>
+  </header>
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">离线安装程序</div>
+      <h1>入门</h1>
+      <p class="lead">打开 Camemake 安装程序。Windows 与 Linux 相同。空板或已有镜像的板，步骤相同。</p>
+      <p class="note">演示工具为英文界面。</p>
+    </div>
+  </div>
+  <section>
+    <div class="wrap">
+      <h2>打开工具</h2>
+      <p>Windows：双击 <strong>CameVision-Single.exe</strong>。</p>
+      <p>Linux：打开 <strong>CameVision-Single</strong> 或 <strong>CameVision-Single.sh</strong>。</p>
+      <p>离线工具：<code>http://127.0.0.1:8765/tool.html</code></p>
+    </div>
+  </section>
+  <section>
+    <div class="wrap steps">
+      <article class="step">
+        <div class="step-num">USB</div>
+        <h2>Maskrom</h2>
+        <ol>
+          <li>接上 USB-C 并供电。</li>
+          <li>安装 USB 驱动。</li>
+          <li>按住 <strong>BOOT</strong>，点按 <strong>RESET</strong>，继续按住 BOOT。</li>
+        </ol>
+      </article>
+      <article class="step">
+        <div class="step-num">镜像</div>
+        <h2>安装</h2>
+        <ol>
+          <li>选择 <strong>CameVision Ego Single Sensor · SC233HGS</strong> 或 <strong>· MIRA220</strong>。</li>
+          <li>点击 <strong>Install</strong>。</li>
+          <li>板子启动后松开 BOOT。</li>
+        </ol>
+        <p>不要烧录 gen1 序列号 <code>0558fa189447bc45</code>。</p>
+      </article>
+      <article class="step">
+        <div class="step-num">ADB</div>
+        <h2>打开</h2>
+        <ol>
+          <li>现场页 <code>http://127.0.0.1:8081/</code></li>
+          <li>IMU <code>http://127.0.0.1:8083/</code></li>
+        </ol>
+      </article>
+    </div>
+  </section>
+  <footer class="foot"><div class="wrap foot-row"><div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div><div><a href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">商城</a></div></div></footer>
+</body>
+</html>
