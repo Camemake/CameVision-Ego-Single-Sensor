@@ -46,7 +46,7 @@
       <div class="grid">
         <div class="card">
           <strong>1 · Camemake UVC</strong>
-          Plug USB. Windows Camera opens <b>Camemake</b> (<code>2207:0016</code>), MJPEG at full resolution. No phone. Mono / MIRA220 is 1400×1600 after Wi-Fi is up. Reboot without Wi-Fi comes back as ADB.
+          Plug USB. Windows Camera opens <b>Camemake</b> (<code>2207:0016</code>), MJPEG at full resolution. No phone. Mono / MIRA220 is 1400×1600 on every boot, any computer. Wi-Fi is not required.
         </div>
         <div class="card">
           <strong>2 · Standalone</strong>
@@ -64,7 +64,7 @@
   <section id="uvc">
     <div class="wrap">
       <h2>Camemake UVC</h2>
-      <p>After Wi-Fi is up, USB is a composite gadget: <b>Camemake</b> webcam plus the microSD as a drive. Reboot without Wi-Fi comes back as ADB <code>2207:0006</code>.</p>
+      <p>After the camera is live, USB is a composite gadget: <b>Camemake</b> webcam plus the microSD as a drive. This binds on every reboot. Wi-Fi is only for Server mode.</p>
       <table>
         <tr><th></th><th>Value</th></tr>
         <tr><td>VID:PID</td><td><code>2207:0016</code> · product Camemake</td></tr>
@@ -139,7 +139,7 @@
       → single_imu_hud.py (:8083)
       → camevision_agent.py (card + GATT + :8090)
       → single_live.py (:8081)
-    → _lock_uvc_safe.sh after wlan0 is up (Camemake UVC)</pre>
+    → _lock_uvc_safe.sh after the live JPEG (Camemake UVC + SD, any host)</pre>
     </div>
   </section>
 

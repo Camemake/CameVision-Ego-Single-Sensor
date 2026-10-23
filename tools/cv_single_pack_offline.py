@@ -101,7 +101,7 @@ After install — video methods
   1. Camemake UVC  USB webcam 2207:0016. MJPEG
      1400x1600 / 1050x1200 / 700x800 / 350x400 at 60/30/15.
      Composite gadget also mounts the microSD card.
-     Reboot without Wi-Fi comes back as ADB 2207:0006.
+     Binds on every boot, any host. Wi-Fi is not required.
   2. Standalone    CameVision phone app over Bluetooth.
      Full-res H.264 + IMU on the card.
   3. Server        Same app. Camera uploads over its Wi-Fi.

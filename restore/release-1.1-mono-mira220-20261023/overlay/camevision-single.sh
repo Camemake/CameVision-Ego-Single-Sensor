@@ -1,6 +1,6 @@
 #!/bin/sh
 # CameVision Single — start live page + 1 IMU + Wi-Fi/BLE on boot.
-# USB starts as official ADB. S99 binds Camemake UVC after wlan0 is up.
+# USB starts as official ADB. S99 binds Camemake UVC after the camera is live.
 # Do not insmod rockit.
 export PATH=/oem/usr/bin:/usr/sbin:/sbin:/usr/bin:/bin
 export LD_LIBRARY_PATH=/oem/usr/lib:/oem/lib:$LD_LIBRARY_PATH

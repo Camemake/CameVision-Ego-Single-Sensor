@@ -46,7 +46,7 @@
       <div class="grid">
         <div class="card">
           <strong>1 · Camemake UVC</strong>
-          插入 USB。Windows 相机打开 <b>Camemake</b>（<code>2207:0016</code>），全分辨率 MJPEG。不需要手机。MIRA220 为 1400×1600。无 Wi-Fi 重启后回到 ADB。
+          插入 USB。Windows 相机打开 <b>Camemake</b>（<code>2207:0016</code>），全分辨率 MJPEG。不需要手机。MIRA220 每次开机即为 1400×1600，任意电脑可用，不依赖 Wi-Fi。
         </div>
         <div class="card">
           <strong>2 · Standalone</strong>
@@ -64,7 +64,7 @@
   <section id="uvc">
     <div class="wrap">
       <h2>Camemake UVC</h2>
-      <p>Wi-Fi 起来后，USB 是复合设备：<b>Camemake</b> 摄像头 + microSD 磁盘。无 Wi-Fi 重启后回到 ADB <code>2207:0006</code>。</p>
+      <p>相机就绪后，USB 是复合设备：<b>Camemake</b> 摄像头 + microSD 磁盘。每次重启都会绑定。Wi-Fi 只用于服务器模式。</p>
       <table>
         <tr><th></th><th>值</th></tr>
         <tr><td>VID:PID</td><td><code>2207:0016</code> · 产品名 Camemake</td></tr>

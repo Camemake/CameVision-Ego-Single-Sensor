@@ -73,10 +73,10 @@ SC233HGS Single kit (`restore/known-good-20260903-single-camera`) and
 Hardware: CameVisionMono_OV V0.3, one AMS MIRA220 (1600×1400 RAW10, GRBG),
 one LSM6 on SPI0. Live view is 1400×1600 after 90° CCW.
 
-USB starts as official **ADB** (`2207:0006`). After Wi-Fi is up, boot
-binds the **Camemake** UVC gadget (`2207:0016`, MJPEG 1400×1600). Official
-S50 stays on disk so a reboot without Wi-Fi comes back as ADB. Telnet
-`:2323` is the shell while UVC holds USB.
+USB starts as official **ADB** (`2207:0006`). After the camera is live,
+boot binds the **Camemake** UVC gadget (`2207:0016`, MJPEG 1400×1600)
+and the microSD drive on any host. Wi-Fi is not required. Official S50
+stays on disk. Telnet `:2323` is the shell while UVC holds USB.
 
 ```
 python tools/cv_single_flash.py --package camevision-mono
@@ -117,7 +117,8 @@ Overlay:
         """# CameVision Mono / MIRA220 · Maskrom flash
 
 Empty Mono AM board. Writes the wifi-pad boot FIT so VS6621 Wi-Fi + BLE
-come up. After first boot, Camemake UVC binds when `wlan0` has an address.
+come up. After first boot, Camemake UVC + the microSD drive bind when
+the camera is live — any host, no Wi-Fi required.
 
 ```
 python tools/cv_single_flash.py --package camevision-mono
@@ -131,7 +132,7 @@ Board already running ADB: `restore-mono.ps1` or
     )
     (rel / "restore-mono.ps1").write_text(
         """# Push CameVision Mono / MIRA220 overlay (Wi-Fi + BLE + Camemake UVC).
-# Deploy stays on ADB. Reboot binds UVC after Wi-Fi is up.
+# Deploy stays on ADB. Reboot binds UVC after the camera is live.
 $ErrorActionPreference = "Stop"
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location $root
@@ -288,7 +289,7 @@ def pack_kit() -> Path:
         "CameVision Mono / MIRA220 release 1.1.\n"
         "Wi-Fi + BLE + Camemake UVC (1400x1600 MJPEG).\n"
         "Product path: python tools/cv_single_flash.py --package camevision-mono\n"
-        "Live page :8081, IMU :8083. Boot ADB, then UVC after Wi-Fi.\n"
+        "Live page :8081, IMU :8083. Boot ADB, then UVC on any host.\n"
         "Do not flash gen1 serial 0558fa189447bc45.\n"
     )
     (ROOT / "restore" / "CURRENT-MONO.txt").write_text(pointer, encoding="ascii")

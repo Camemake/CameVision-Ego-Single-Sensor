@@ -1,5 +1,5 @@
 #!/bin/sh
-# Start HS UVC named Camemake after Wi-Fi is up. Reboot returns to ADB-only.
+# Start HS UVC named Camemake. Wi-Fi is optional. Reboot binds again.
 export PATH=/oem/usr/bin:/usr/sbin:/sbin:/usr/bin:/bin:$PATH
 LOG=/userdata/cv-uvc-start.log
 log() { echo "$(date +%T) $*" | tee -a "$LOG"; }
@@ -21,8 +21,7 @@ if ip -4 addr show wlan0 2>/dev/null | grep -q 'inet '; then
 	ip -4 addr show wlan0 | grep inet | tee -a "$LOG"
 	log "WIFI_OK"
 else
-	log "NO_WIFI — refuse UVC bind, keep ADB"
-	exit 2
+	log "NO_WIFI — bind UVC anyway"
 fi
 
 if [ -x /userdata/_lock_uvc_safe.sh ]; then

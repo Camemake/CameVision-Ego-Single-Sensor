@@ -28,7 +28,7 @@
 
 **CameVision Ego Single Sensor** is one global-shutter camera, one IMU, an on-board vision processor with NPU, USB, Wi-Fi 6, BLE, eMMC and battery support.
 
-This repository is the **open demo firmware** that ships with the product. USB starts as **ADB**. After Wi-Fi is up, the Mono / MIRA220 release binds the **Camemake** UVC gadget (`2207:0016`) and mounts the microSD card. Preview and record on the phone go over Bluetooth through the separate [CameVision App](https://github.com/Camemake/CameVision-App). The live page is a lab view, not a UVC substitute.
+This repository is the **open demo firmware** that ships with the product. USB starts as **ADB**, then the Mono / MIRA220 release binds the **Camemake** UVC gadget (`2207:0016`) and mounts the microSD card on every boot — any host, no Wi-Fi required. Preview and record on the phone go over Bluetooth through the separate [CameVision App](https://github.com/Camemake/CameVision-App). The live page is a lab view, not a UVC substitute.
 
 ## Product
 

@@ -1,6 +1,6 @@
 #!/bin/sh
-# Boot: live page + Wi-Fi + BLE, then Camemake UVC after wlan0 has an address.
-# Official ADB S50 stays on disk. If Wi-Fi never comes up, USB stays ADB.
+# Boot: live + Wi-Fi/BLE, then Camemake UVC + SD on this USB.
+# Do not wait for wlan0 — any host must see the webcam.
 # $1 is "start" from rcS. Detach with setsid so this survives sysinit.
 [ "$1" = "start" ] || [ -z "$1" ] || exit 0
 chmod 755 /userdata/camevision-single.sh /userdata/_lock_uvc_safe.sh 2>/dev/null
@@ -8,18 +8,21 @@ if [ ! -x /userdata/camevision-single.sh ]; then
 	exit 0
 fi
 setsid /bin/sh -c '
-	sleep 8
+	sleep 5
 	/userdata/camevision-single.sh
 	n=0
-	while [ $n -lt 45 ]; do
-		if ip -4 addr show wlan0 2>/dev/null | grep -q "inet " \
-			&& [ -s /tmp/camevision-live.jpg ] \
-			&& [ -x /userdata/_lock_uvc_safe.sh ]; then
-			exec /bin/sh /userdata/_lock_uvc_safe.sh
+	while [ $n -lt 25 ]; do
+		if [ -s /tmp/camevision-live.jpg ]; then
+			break
 		fi
 		n=$((n+1))
-		sleep 2
+		sleep 1
 	done
-	echo "UVC_SKIP no wifi or live jpeg" >> /userdata/uvc-boot.log
+	if [ -x /userdata/_lock_uvc_safe.sh ]; then
+		/bin/sh /userdata/_lock_uvc_safe.sh \
+			|| { sleep 3; /bin/sh /userdata/_lock_uvc_safe.sh; }
+	else
+		echo "UVC_SKIP missing _lock_uvc_safe.sh" >> /userdata/uvc-boot.log
+	fi
 ' </dev/null >/userdata/single-live-boot.log 2>&1 &
 exit 0

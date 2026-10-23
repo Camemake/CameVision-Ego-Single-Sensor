@@ -8,10 +8,10 @@ SC233HGS Single kit (`restore/known-good-20260903-single-camera`) and
 Hardware: CameVisionMono_OV V0.3, one AMS MIRA220 (1600×1400 RAW10, GRBG),
 one LSM6 on SPI0. Live view is 1400×1600 after 90° CCW.
 
-USB starts as official **ADB** (`2207:0006`). After Wi-Fi is up, boot
-binds the **Camemake** UVC gadget (`2207:0016`, MJPEG 1400×1600). Official
-S50 stays on disk so a reboot without Wi-Fi comes back as ADB. Telnet
-`:2323` is the shell while UVC holds USB.
+USB starts as official **ADB** (`2207:0006`). After the camera is live,
+boot binds the **Camemake** UVC gadget (`2207:0016`, MJPEG 1400×1600)
+and the microSD drive on any host. Wi-Fi is not required. Official S50
+stays on disk. Telnet `:2323` is the shell while UVC holds USB.
 
 ```
 python tools/cv_single_flash.py --package camevision-mono

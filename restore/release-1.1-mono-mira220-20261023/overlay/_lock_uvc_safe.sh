@@ -11,7 +11,41 @@ LOG=/userdata/cv-rk-uvc.log
 log() { echo "$*" | tee -a "$LOG"; }
 
 busybox telnetd -l /bin/sh -p 2323 2>/dev/null || true
-ip -4 addr show wlan0 | grep -q 'inet ' || { log 'NO_WIFI'; exit 1; }
+
+exec 9>/tmp/cv-lock-uvc.lock
+if command -v flock >/dev/null 2>&1; then
+	flock -n 9 || { log LOCKED; exit 0; }
+fi
+
+_prep_configfs() {
+	if ! grep -q ' /sys/kernel/config ' /proc/mounts; then
+		mkdir -p /sys/kernel/config
+		mount -t configfs none /sys/kernel/config \
+			|| mount -t configfs configfs /sys/kernel/config || true
+	fi
+	modprobe libcomposite 2>/dev/null || true
+	modprobe usb_f_uvc 2>/dev/null || true
+	modprobe usb_f_mass_storage 2>/dev/null || true
+	mkdir -p "$G" "$F" "$C"
+	log CONFIGFS=$(grep configfs /proc/mounts | head -1)
+}
+
+_restore_s50() {
+	mount -o remount,rw / 2>/dev/null || true
+	if [ -f /userdata/cv-s50-bak/S50usbdevice.official ]; then
+		rm -f /etc/init.d/S50usbdevice
+		cat /userdata/cv-s50-bak/S50usbdevice.official > /etc/init.d/S50usbdevice
+		chmod 755 /etc/init.d/S50usbdevice
+		log S50_RESTORED
+	fi
+	if [ -f /userdata/cv-s50-bak/usbdevice.official ]; then
+		rm -f /usr/bin/usbdevice
+		cat /userdata/cv-s50-bak/usbdevice.official > /usr/bin/usbdevice
+		chmod 755 /usr/bin/usbdevice
+	fi
+}
+
+_prep_configfs
 
 mount -o remount,rw / 2>/dev/null || true
 mkdir -p /userdata/cv-s50-bak
@@ -167,19 +201,20 @@ printf '' > $MSC/lun.0/file 2>/dev/null || echo > $MSC/lun.0/file
 ln -s $MSC $C/f2
 log MSC=$MSC
 
-echo 21500000.usb > $G/UDC
+echo 21500000.usb > $G/UDC || {
+	log UDC_BUSY retry
+	sleep 2
+	echo none > $G/UDC 2>/dev/null || true
+	sleep 1
+	echo 21500000.usb > $G/UDC
+}
 log BIND_RC=$? UDC=$(cat $G/UDC) STATE=$(cat /sys/class/udc/21500000.usb/state)
 log VIDEO=$(ls /sys/class/udc/21500000.usb/device/gadget.0/video4linux/ 2>/dev/null)
 log F01=$(cat $F/$UVC_GS/streaming/mjpeg/m/f01_1400_1600_60/wWidth 2>/dev/null)x$(cat $F/$UVC_GS/streaming/mjpeg/m/f01_1400_1600_60/wHeight 2>/dev/null)
 
 if ! ls /sys/class/udc/21500000.usb/device/gadget.0/video4linux/video* >/dev/null 2>&1; then
 	log UVC_FAIL
-	if [ -f /userdata/cv-s50-bak/S50usbdevice.official ]; then
-		cp -a /userdata/cv-s50-bak/S50usbdevice.official /etc/init.d/S50usbdevice
-	fi
-	if [ -f /userdata/cv-s50-bak/usbdevice.official ]; then
-		cp -a /userdata/cv-s50-bak/usbdevice.official /usr/bin/usbdevice
-	fi
+	_restore_s50
 	exit 2
 fi
 log UVC_OK BAD=$BAD
@@ -195,13 +230,7 @@ fi
 sleep 1
 tail -8 /userdata/cv-uvc-bridge.log | tee -a "$LOG"
 
-if [ -f /userdata/cv-s50-bak/S50usbdevice.official ]; then
-	cp -a /userdata/cv-s50-bak/S50usbdevice.official /etc/init.d/S50usbdevice
-	log S50_RESTORED
-fi
-if [ -f /userdata/cv-s50-bak/usbdevice.official ]; then
-	cp -a /userdata/cv-s50-bak/usbdevice.official /usr/bin/usbdevice
-fi
+_restore_s50
 rm -f /userdata/uvc-webcam.on
 mount -o remount,ro / 2>/dev/null || true
 

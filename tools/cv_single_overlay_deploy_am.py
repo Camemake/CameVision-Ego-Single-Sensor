@@ -2,7 +2,7 @@
 """Install the CameVision Mono / MIRA220 overlay over ADB.
 
 One camera, one IMU. Does not flash partitions. Does not touch Ego.
-Deploy stays on ADB. Reboot binds Camemake UVC after Wi-Fi is up.
+Deploy stays on ADB. Reboot binds Camemake UVC after the camera is live.
 """
 from __future__ import annotations
 

@@ -2,7 +2,8 @@
 
 Empty board or a board that already has images. SC233 stays ADB
 (`2207:0006`). Mono / MIRA220 boots ADB, then binds Camemake UVC
-(`2207:0016`) after Wi-Fi is up.
+(`2207:0016`) and the microSD drive after the camera is live — any
+host, no Wi-Fi required.
 
 ## Kits
 
