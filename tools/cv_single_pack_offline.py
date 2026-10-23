@@ -89,8 +89,10 @@ USB / Maskrom
   Install USB driver. Hold BOOT, tap RESET, keep BOOT held.
 
 Package
-  Select CameVision Ego Single Sensor · SC233HGS or · MIRA220.
-  Install. Writes loader, env, idblock, U-Boot, boot,
+  This zip installs CameVision Ego Single Sensor · SC233HGS.
+  MIRA220 1.1 is in the GitHub repo:
+    python tools/cv_single_flash.py --package camevision-mono
+  Install writes loader, env, idblock, U-Boot, boot,
   userdata, oem, rootfs, and the overlay.
   Release BOOT when the board starts.
   Do not flash gen1 serial 0558fa189447bc45.
@@ -386,11 +388,12 @@ def _verify_pack(out: Path) -> None:
                 raise SystemExit(f"packed tree cannot resolve {key}")
         if packed_ud() is None:
             raise SystemExit("packed tree cannot resolve userdata")
-        pkgs = packages()
-        if len(pkgs) != 1 or pkgs[0]["id"] != "camevision-single":
-            raise SystemExit("pack must expose only CameVision Single")
-        if not pkgs[0]["ready"]:
-            raise SystemExit("CameVision Single package is not ready: " + ", ".join(pkgs[0]["missing"]))
+        pkgs = {p["id"]: p for p in packages()}
+        sc233 = pkgs.get("camevision-single")
+        if sc233 is None:
+            raise SystemExit("pack missing CameVision Single package")
+        if not sc233["ready"]:
+            raise SystemExit("CameVision Single package is not ready: " + ", ".join(sc233["missing"]))
         if not (out / "CameVision-Single.cmd").is_file():
             raise SystemExit("pack missing CameVision-Single.cmd")
         if not (out / "CameVision-Single.exe").is_file():
