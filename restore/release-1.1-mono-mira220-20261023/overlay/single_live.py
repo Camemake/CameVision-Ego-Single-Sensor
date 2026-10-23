@@ -70,7 +70,7 @@ def _load_native() -> None:
     global NATIVE
     if not AM:
         return
-    for path in (COLOR_SO, "/userdata/libego_stereo.so"):
+    for path in (COLOR_SO,):
         if not path or not os.path.exists(path):
             continue
         try:

@@ -153,9 +153,6 @@ def main() -> int:
         src = ROOT / "tools" / name
         if src.is_file():
             copy_file(src, OUT / "tools" / name)
-    wpa = ROOT / "tools" / "wpa_camevision.conf"
-    if wpa.is_file():
-        copy_file(wpa, OUT / "tools" / "wpa_camevision.conf")
     iq = ROOT / "tools" / "iqfiles" / IQ_NAME
     if iq.is_file():
         copy_file(iq, OUT / "tools" / "iqfiles" / iq.name)
@@ -205,7 +202,6 @@ def main() -> int:
         "camevision-led.sh",
         "camevision-imu.sh",
         "camevision-diag.sh",
-        "wpa_camevision.conf",
         "S50usbdevice",
         "S99camevision",
     ):
@@ -329,7 +325,7 @@ def _verify_pack(out: Path) -> None:
         if not live.is_file() or not sh.is_file() or not ov.is_file():
             raise SystemExit("packed tree missing mono live overlay scripts")
         text = live.read_text(encoding="utf-8")
-        if "scale(-1,-1)" in text or "ego_stereo" in text:
+        if "scale(-1,-1)" in text or "ego_stereo.py" in text:
             raise SystemExit("packed live page still has Ego stereo / CSS 180")
         if "/dev/video13" not in text:
             raise SystemExit("packed live page is not the mono /dev/video13 layout")
