@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision demo app: Bluetooth preview and record, card, QR trigger, and server upload. Works with Ego Single and Ego.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="icon" href="assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>Single Sensor &middot; 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">Product</a>
+        <a href="start.html">Get started</a>
+        <a href="flash.html">Flash</a>
+        <a href="hardware.html">Hardware</a>
+        <a href="mechanical.html">Mechanical</a>
+        <a href="optics.html">Optics</a>
+        <a href="software.html">Software</a>
+        <a class="active" href="app.html">App</a>
+        <a href="datasheet.html">Datasheet</a>
+      </nav>
+      <div class="lang"><a class="on" href="app.html">EN</a><a href="zh/app.html">中文</a></div>
+      <a class="buy" href="https://www.camemake.eu/shop/camevision-ego-single-sensor-4547">Buy</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">Demo app · 0.1</div>
+      <h1>CameVision app</h1>
+      <p class="lead">One phone app for CameVision boards. Preview and record over Bluetooth. The home title is CameVision until a camera is linked, then it shows that board’s own title.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/Camemake/CameVision-App/releases/tag/0.1">Download 0.1</a>
+        <a class="btn" href="https://github.com/Camemake/CameVision-App">Source</a>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>The app</h2>
+      <div class="shots">
+        <figure class="shot">
+          <img src="assets/app-record.png" alt="Record tab: Start recording and Position">
+          <figcaption>Record — start / recording / stop, Position preview, QR trigger</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/app-card.png" alt="Card tab: space and sessions">
+          <figcaption>Card — free space, sessions, clear and delete</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/app-setup.png" alt="Setup tab: pair, server, Wi-Fi, About">
+          <figcaption>Setup — pair, server, camera Wi-Fi, About</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>What it controls</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>Record</strong>
+          Start recording, Recording, Stop recording. Full-resolution H.264 + IMU on the microSD card. Position is a live JPEG over Bluetooth, not the MP4.
+        </div>
+        <div class="card">
+          <strong>Card</strong>
+          Free / used space, session list, delete one, clear all. Warning when the card is nearly full.
+        </div>
+        <div class="card">
+          <strong>Setup</strong>
+          Pair and forget over Bluetooth. Server URL and optional token. Camera Wi-Fi. About reads the board title, firmware, SKU, sensors, protocol.
+        </div>
+        <div class="card">
+          <strong>QR trigger</strong>
+          Optional code on Record. Set the text in Setup. Point the camera at it to trigger.
+        </div>
+      </div>
+      <p>Scan matches a name containing <code>CameVision</code>, or GATT <code>6c9a0001-1a6f-4e84-8a00-63616d657631</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Video methods</h2>
+      <p>The board has four image paths. USB Camemake UVC is not an app screen.</p>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>What you get</th></tr>
+        <tr><td><b>Camemake UVC</b></td><td>USB · Windows / Linux camera app</td><td>MJPEG webcam. Full resolution. See <a href="software.html#uvc">UVC</a>.</td></tr>
+        <tr><td><b>Position</b></td><td>Bluetooth JPEG</td><td>Live preview in this app. Not written to the card.</td></tr>
+        <tr><td><b>Record</b></td><td>Bluetooth start/stop · card MP4</td><td>Full-resolution H.264 + <code>imu0.csv</code> on the microSD.</td></tr>
+        <tr><td><b>Server</b></td><td>Bluetooth start/stop · camera Wi-Fi upload</td><td>Same card files. Camera uploads when Wi-Fi is up. Card is the buffer.</td></tr>
+        <tr><td>Live page</td><td>Browser <code>:8081</code></td><td>Lab view on the board. Not a substitute for UVC or the app.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Install</h2>
+      <ol>
+        <li>Install <a href="https://github.com/Camemake/CameVision-App/releases/download/0.1/CameVision-0.1-debug.apk">CameVision 0.1</a> (debug APK).</li>
+        <li>Turn the camera on. Pair <b>CameVision</b> + the last 6 MAC hex digits (example <code>CameVision-462C47</code>).</li>
+        <li>Record and Position use Bluetooth. Set a real server URL in Setup only if you use Server mode.</li>
+      </ol>
+      <p class="muted">Source and later builds: <a href="https://github.com/Camemake/CameVision-App">Camemake/CameVision-App</a>. Firmware for this board stays in this repository.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div>
+      <div><a href="https://github.com/Camemake/CameVision-App">CameVision-App</a></div>
+    </div>
+  </footer>
+</body>
+</html>

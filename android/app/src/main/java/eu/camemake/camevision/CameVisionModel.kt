@@ -23,6 +23,7 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
     val banner = MutableStateFlow("")
     val previewImage = MutableStateFlow<ByteArray?>(null)
     val previewUntil = MutableStateFlow(0L)
+    val showQr = MutableStateFlow(false)
     val recordStarted = MutableStateFlow(0L)
 
     private var draftReady = false
@@ -44,7 +45,11 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
                     draftReady = true
                     draft.value = cfg
                 }
-                link.watchHttp(cfg.host)
+                if (cfg.mode == CaptureMode.Online) {
+                    link.watchHttp(cfg.host)
+                } else {
+                    link.watchHttp("")
+                }
             }
         }
         viewModelScope.launch {
@@ -99,7 +104,7 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun scanWifi() {
-        if (link.state.value.transport.isEmpty()) return
+        if (link.state.value.transport != "ble") return
         link.command("""{"cmd":"wifi"}""")
     }
 
@@ -107,21 +112,25 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
         if (link.state.value.status.recording) return
         draft.value = draft.value.copy(mode = mode)
         viewModelScope.launch { store.setMode(mode) }
-        if (link.state.value.transport.isNotEmpty()) {
+        if (link.state.value.transport == "ble") {
             link.command("""{"cmd":"mode","mode":"${mode.wire()}"}""")
+        }
+        if (mode == CaptureMode.Online) {
+            link.watchHttp(saved.value.host)
+        } else {
+            link.watchHttp("")
         }
     }
 
     fun toggleRecord() {
         banner.value = ""
+        if (!requireBle()) return
         val state = link.state.value
-        if (state.transport.isEmpty() && saved.value.host.isBlank()) {
-            findCamera()
-            return
-        }
         if (state.status.recording) {
+            link.setRecording(false)
             link.command("""{"cmd":"stop"}""")
         } else {
+            link.setRecording(true)
             val mode = draft.value.mode.wire()
             link.command("""{"cmd":"start","mode":"$mode"}""")
         }
@@ -130,9 +139,21 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
     fun startPreview() {
         banner.value = ""
         previewImage.value = null
-        val until = System.currentTimeMillis() + 4_000
-        previewUntil.value = until
-        link.command("""{"cmd":"preview","seconds":4}""")
+        if (!requireBle()) return
+        previewUntil.value = Long.MAX_VALUE
+        link.command("""{"cmd":"preview","seconds":3600}""")
+        viewModelScope.launch {
+            var tries = 0
+            while (isActive && previewUntil.value > 0L) {
+                if (previewImage.value != null) {
+                    if (banner.value == "no_image" || banner.value == "pair") banner.value = ""
+                } else if (tries == 8) {
+                    banner.value = "no_image"
+                }
+                tries += 1
+                delay(400)
+            }
+        }
     }
 
     fun stopPreview() {
@@ -140,12 +161,19 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
         link.command("""{"cmd":"preview","seconds":0}""")
     }
 
+    fun openQr() {
+        showQr.value = true
+    }
+
+    fun closeQr() {
+        showQr.value = false
+    }
+
     fun save() {
         val cfg = draft.value
         viewModelScope.launch {
             store.save(cfg)
-            val linked = link.state.value.transport.isNotEmpty()
-            if (linked) {
+            if (link.state.value.transport == "ble") {
                 link.command(configJson(cfg))
                 banner.value = "saved_sent"
             } else {
@@ -156,11 +184,13 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
 
     fun clearCard() {
         banner.value = ""
+        if (!requireBle()) return
         link.command("""{"cmd":"clear"}""")
     }
 
     fun deleteSession(id: String) {
         banner.value = ""
+        if (!requireBle()) return
         link.command("""{"cmd":"delete","session":"$id"}""")
     }
 
@@ -185,6 +215,12 @@ class CameVisionModel(app: Application) : AndroidViewModel(app) {
 
     fun cancelSend() {
         TransferHub.cancel = true
+    }
+
+    private fun requireBle(): Boolean {
+        if (link.state.value.transport == "ble") return true
+        banner.value = "pair"
+        return false
     }
 
     fun btGranted(): Boolean {

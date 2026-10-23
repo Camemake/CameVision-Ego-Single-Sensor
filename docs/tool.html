@@ -24,9 +24,10 @@
         <a href="mechanical.html">Mechanical</a>
         <a href="optics.html">Optics</a>
         <a href="software.html">Software</a>
+        <a href="app.html">App</a>
         <a href="datasheet.html">Datasheet</a>
       </nav>
-      <div class="lang"><a class="on" href="tool.html">EN</a><a href="zh/start.html">中文</a></div>
+      <div class="lang"><a class="on" href="tool.html">EN</a><a href="zh/tool.html">中文</a></div>
       <a class="buy" href="https://www.camemake.eu/shop/camevision-ego-single-sensor-4547">Buy</a>
     </div>
   </header>
@@ -35,7 +36,7 @@
     <div class="wrap">
       <div class="kicker">Offline installer</div>
       <h1>CameVision Ego Single Sensor</h1>
-      <p class="lead">USB, package, ADB. Windows and Linux. Empty board or a board that already has images.</p>
+      <p class="lead">USB, package, ADB. Then use the camera as Camemake UVC, or from the phone app in Standalone or Server mode.</p>
       <p id="ready" class="muted">Checking local files…</p>
     </div>
   </div>
@@ -84,6 +85,28 @@
           <button type="button" id="btn-stop" hidden>Stop</button>
         </div>
       </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Use the camera</h2>
+      <p>After install, the board has three options. The last two are the phone app (<code>android/</code>).</p>
+      <div class="grid">
+        <div class="card">
+          <strong>1 · Camemake UVC</strong>
+          Plug USB and open Windows Camera. Full resolution. No phone. Mono binds this gadget after Wi-Fi is up.
+        </div>
+        <div class="card">
+          <strong>2 · Standalone</strong>
+          Pair <b>CameVision Ego Single</b> + last 6 MAC hex. Record on the card over Bluetooth. Send through the phone to the server in Setup. Clear the card from the app. Position preview is 10 seconds at quarter resolution.
+        </div>
+        <div class="card">
+          <strong>3 · Server</strong>
+          Same app. The camera uploads over its Wi-Fi. Replace the template <code>https://server.example.com/camevision/v1</code> in Setup. Leave the token empty when that server is open.
+        </div>
+      </div>
+      <p class="muted">Card files: <code>camevision/sessions/&lt;UTC&gt;/session.json</code>, <code>imu0.csv</code>, <code>cam0/video.mp4</code>. App: <a href="app.html">CameVision 0.1</a>. UVC: Camemake <code>2207:0016</code> MJPEG 1400×1600 and the SD card as a drive.</p>
     </div>
   </section>
 

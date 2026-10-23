@@ -40,11 +40,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -68,9 +66,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.camemake.camevision.CameVisionModel
 import eu.camemake.camevision.R
 import eu.camemake.camevision.TransferHub
+import eu.camemake.camevision.frontTitle
 import eu.camemake.camevision.isServerTemplate
-import kotlinx.coroutines.delay
-import kotlin.math.max
 
 private enum class Tab { Record, Card, Setup }
 
@@ -80,6 +77,8 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
     val banner by model.banner.collectAsState()
     val previewUntil by model.previewUntil.collectAsState()
     val preview by model.previewImage.collectAsState()
+    val showQr by model.showQr.collectAsState()
+    val draft by model.draft.collectAsState()
     val transfer by TransferHub.state.collectAsState()
     val saved by model.saved.collectAsState()
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -91,7 +90,7 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
     var sendTarget by rememberSaveable { mutableStateOf("") }
     var removeAfter by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    val previewOpen = previewUntil > System.currentTimeMillis()
+    val previewOpen = previewUntil > 0L
 
     val permissions = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -119,7 +118,9 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
         }
     }
 
-    BackHandler(enabled = previewOpen) { model.stopPreview() }
+    BackHandler(enabled = previewOpen || showQr) {
+        if (showQr) model.closeQr() else model.stopPreview()
+    }
 
     Box(Modifier.fillMaxSize().background(CameBg)) {
         Scaffold(
@@ -127,8 +128,8 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 BrandBar(
-                    connected = link.transport.isNotEmpty(),
-                    name = link.name,
+                    connected = link.transport == "ble",
+                    name = frontTitle(link.transport == "ble", link.status, link.name),
                     onConnect = { connect() },
                 )
             },
@@ -173,7 +174,10 @@ fun CameVisionApp(model: CameVisionModel = viewModel()) {
             }
         }
         if (previewOpen) {
-            PreviewOverlay(preview, previewUntil) { model.stopPreview() }
+            PreviewOverlay(preview) { model.stopPreview() }
+        }
+        if (showQr) {
+            QrOverlay(draft.qr.ifBlank { "camevision-trigger" }) { model.closeQr() }
         }
     }
 
@@ -272,15 +276,7 @@ private fun BottomItem(
 }
 
 @Composable
-private fun PreviewOverlay(jpeg: ByteArray?, until: Long, onClose: () -> Unit) {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(until) {
-        while (System.currentTimeMillis() < until) {
-            now = System.currentTimeMillis()
-            delay(250)
-        }
-        onClose()
-    }
+private fun PreviewOverlay(jpeg: ByteArray?, onClose: () -> Unit) {
     val bitmap: ImageBitmap? = remember(jpeg) {
         if (jpeg == null) {
             null
@@ -288,7 +284,6 @@ private fun PreviewOverlay(jpeg: ByteArray?, until: Long, onClose: () -> Unit) {
             BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size)?.asImageBitmap()
         }
     }
-    val left = max(0, ((until - now) / 1000).toInt())
     Box(
         Modifier
             .fillMaxSize()
@@ -301,16 +296,13 @@ private fun PreviewOverlay(jpeg: ByteArray?, until: Long, onClose: () -> Unit) {
                 .fillMaxSize()
                 .padding(20.dp),
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.preview_title), color = Color.White, fontWeight = FontWeight.Bold)
-                Text(stringResource(R.string.preview_left, left), color = Color.White, fontWeight = FontWeight.Bold)
-            }
+            Text(stringResource(R.string.preview_title), color = Color.White, fontWeight = FontWeight.Bold)
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (bitmap != null) {
                     Image(
                         bitmap = bitmap,
                         contentDescription = stringResource(R.string.preview_title),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit,
                     )
                 } else {
@@ -322,6 +314,42 @@ private fun PreviewOverlay(jpeg: ByteArray?, until: Long, onClose: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(12.dp))
+            QuietButton(stringResource(R.string.close), Modifier.fillMaxWidth(), onClose)
+        }
+    }
+}
+
+@Composable
+private fun QrOverlay(text: String, onClose: () -> Unit) {
+    val bitmap = remember(text) { qrBitmap(text) }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .clickable(onClick = {}),
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(stringResource(R.string.qr_title), color = CameInk, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text(text, color = CameMuted, fontSize = 13.sp, textAlign = TextAlign.Center)
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = stringResource(R.string.qr_title),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit,
+                    )
+                } else {
+                    Text(stringResource(R.string.qr_empty), color = CameMuted)
+                }
+            }
             QuietButton(stringResource(R.string.close), Modifier.fillMaxWidth(), onClose)
         }
     }

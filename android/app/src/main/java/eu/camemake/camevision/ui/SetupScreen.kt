@@ -50,6 +50,8 @@ import eu.camemake.camevision.FoundDevice
 import eu.camemake.camevision.LinkState
 import eu.camemake.camevision.R
 import eu.camemake.camevision.WifiNet
+import eu.camemake.camevision.frontTitle
+import eu.camemake.camevision.isStereo
 import kotlin.math.roundToInt
 
 @Composable
@@ -88,6 +90,10 @@ fun SetupScreen(
                     Text(stringResource(R.string.bt_paired), color = CameTeal, fontSize = 13.sp)
                 }
                 QuietButton(stringResource(R.string.bt_forget), Modifier.fillMaxWidth(), onForget)
+            } else if (link.transport == "http") {
+                Text(link.name.ifBlank { stringResource(R.string.product_title) }, fontWeight = FontWeight.SemiBold, color = CameInk)
+                Text(stringResource(R.string.http_linked), color = CameTeal, fontSize = 13.sp)
+                PinkButton(stringResource(R.string.bt_pair), Modifier.fillMaxWidth(), onPair)
             } else {
                 Text(stringResource(R.string.not_connected), color = CameMuted, fontSize = 14.sp)
                 PinkButton(stringResource(R.string.bt_pair), Modifier.fillMaxWidth(), onPair)
@@ -218,6 +224,18 @@ fun SetupScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             )
         }
+        Spacer(Modifier.height(12.dp))
+        FieldCard {
+            SectionLabel(stringResource(R.string.qr_label))
+            Help(stringResource(R.string.qr_hint))
+            OutlinedTextField(
+                value = draft.qr,
+                onValueChange = { model.updateDraft(model.draft.value.copy(qr = it)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text(stringResource(R.string.qr_value)) },
+            )
+        }
         Spacer(Modifier.height(16.dp))
         PinkButton(stringResource(R.string.save), Modifier.fillMaxWidth()) { model.save() }
         val shown = bannerText(banner)
@@ -228,8 +246,47 @@ fun SetupScreen(
         Spacer(Modifier.height(18.dp))
         FieldCard {
             SectionLabel(stringResource(R.string.about))
-            Text(stringResource(R.string.about_product), fontWeight = FontWeight.SemiBold, color = CameInk)
-            Text(stringResource(R.string.about_sku), color = CameMuted, fontSize = 14.sp)
+            val board = link.status
+            Text(
+                frontTitle(link.transport == "ble", board, link.name),
+                fontWeight = FontWeight.SemiBold,
+                color = CameInk,
+            )
+            if (board.sku.isNotBlank() || board.product.isNotBlank()) {
+                Text(
+                    stringResource(
+                        R.string.about_sku_line,
+                        board.sku.ifBlank { board.product },
+                        if (board.isStereo()) stringResource(R.string.about_sensors_two) else stringResource(R.string.about_sensors_one),
+                    ),
+                    color = CameMuted,
+                    fontSize = 14.sp,
+                )
+            } else {
+                Text(stringResource(R.string.about_sku), color = CameMuted, fontSize = 14.sp)
+            }
+            if (board.fw.isNotBlank()) {
+                Text(stringResource(R.string.about_fw, board.fw), color = CameMuted, fontSize = 14.sp)
+            }
+            if (board.boardId.isNotBlank()) {
+                Text(stringResource(R.string.about_board, board.boardId), color = CameMuted, fontSize = 14.sp)
+            }
+            if (board.sensor.isNotBlank() || board.nativeW > 0) {
+                val size = if (board.nativeW > 0 && board.nativeH > 0) {
+                    stringResource(R.string.resolution, board.nativeW, board.nativeH)
+                } else {
+                    board.sensor
+                }
+                Text(
+                    stringResource(R.string.about_sensor, board.sensor.ifBlank { stringResource(R.string.full_video) }, size, board.sensors),
+                    color = CameMuted,
+                    fontSize = 14.sp,
+                )
+            }
+            if (board.protocol > 0) {
+                Text(stringResource(R.string.about_protocol, board.protocol), color = CameMuted, fontSize = 14.sp)
+            }
+            Text(stringResource(R.string.about_app), color = CameMuted, fontSize = 14.sp)
         }
         Spacer(Modifier.height(20.dp))
     }

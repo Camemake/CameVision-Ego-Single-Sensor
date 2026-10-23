@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Software · CameVision Ego Single Sensor · Camemake</title>
-  <meta name="description" content="CameVision Ego Single Sensor software: one-pane live page, IMU HUD, host offline tool.">
+  <meta name="description" content="CameVision Ego Single Sensor software: Camemake UVC, phone app Standalone and Server modes, live page, offline tool.">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="icon" href="assets/camemake-logo.png">
 </head>
@@ -24,6 +24,7 @@
         <a href="mechanical.html">Mechanical</a>
         <a href="optics.html">Optics</a>
         <a class="active" href="software.html">Software</a>
+        <a href="app.html">App</a>
         <a href="datasheet.html">Datasheet</a>
       </nav>
       <div class="lang"><a class="on" href="software.html">EN</a><a href="zh/software.html">中文</a></div>
@@ -35,9 +36,67 @@
     <div class="wrap">
       <div class="kicker">This package</div>
       <h1>Software</h1>
-      <p class="lead">One-pane live page and one IMU HUD run on the board. The PC flashes, deploys, and forwards ADB.</p>
+      <p class="lead">Three ways to use the camera: USB Camemake UVC, the phone app in Standalone, or the phone app in Server mode. The PC flashes the board. The live page is a lab view, not a substitute for those three.</p>
     </div>
   </div>
+
+  <section>
+    <div class="wrap">
+      <h2>Three options</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>1 · Camemake UVC</strong>
+          Plug USB. Windows Camera opens <b>Camemake</b> (<code>2207:0016</code>), MJPEG at full resolution. No phone. Mono / MIRA220 is 1400×1600 after Wi-Fi is up. Reboot without Wi-Fi comes back as ADB.
+        </div>
+        <div class="card">
+          <strong>2 · Standalone</strong>
+          The CameVision app starts and stops a recording over Bluetooth. Full camera + IMU land on the microSD card. The phone copies the files and uploads them to the server you set in Setup. The card warns when it is nearly full. You can clear recordings from the app.
+        </div>
+        <div class="card">
+          <strong>3 · Server</strong>
+          Same app, same card files. The camera uploads over its own Wi-Fi to that server. The card is the buffer if the network drops. Setup holds the server URL. It starts as a template: <code>https://server.example.com/camevision/v1</code>.
+        </div>
+      </div>
+      <p class="muted">Phone app: <a href="app.html">App</a> and <a href="https://github.com/Camemake/CameVision-App">CameVision-App</a>. Recorder: <code>tools/camevision_agent.py</code>. Server contract: <code>android/server.template.json</code>. Scan name contains <code>CameVision</code> + last 6 MAC hex digits.</p>
+    </div>
+  </section>
+
+  <section id="uvc">
+    <div class="wrap">
+      <h2>Camemake UVC</h2>
+      <p>After Wi-Fi is up, USB is a composite gadget: <b>Camemake</b> webcam plus the microSD as a drive. Reboot without Wi-Fi comes back as ADB <code>2207:0006</code>.</p>
+      <table>
+        <tr><th></th><th>Value</th></tr>
+        <tr><td>VID:PID</td><td><code>2207:0016</code> · product Camemake</td></tr>
+        <tr><td>Class</td><td>Composite 0/0/0 · UVC IAD + mass-storage</td></tr>
+        <tr><td>Format</td><td>MJPEG</td></tr>
+        <tr><td>Sizes × fps</td><td>1400×1600 · 1050×1200 · 700×800 · 350×400 at 60 / 30 / 15</td></tr>
+        <tr><td>Controls</td><td>Exposure, brightness, contrast, gain, gamma, AE, power-line, white-balance</td></tr>
+        <tr><td>SD card</td><td>Windows / Linux mount the FAT volume (sessions in <code>camevision/sessions/</code>)</td></tr>
+        <tr><td>Image</td><td>On-board AM ISP (MIRA220 LUT) or rkaiq (SC233). The gadget only sends JPEG.</td></tr>
+      </table>
+      <p>Host: Windows Camera, or any UVC client. Do not open the card in the app while the computer has the drive mounted.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>On the card</h2>
+      <p>One camera, one IMU. This is not the Ego stereo <code>My Recordings/&lt;serial&gt;_&lt;boot&gt;_&lt;index&gt;/episode/</code> take (two HEVC files + IMU JSONL on the PC).</p>
+      <pre>&lt;card&gt;/camevision/sessions/20261023T160102Z/
+  session.json
+  imu0.csv
+  cam0/video.mp4
+  COMPLETE</pre>
+      <table>
+        <tr><th>File</th><th>Content</th></tr>
+        <tr><td><code>cam0/video.mp4</code></td><td>Full-resolution H.264. SC233 1920×1200. MIRA220 1400×1600</td></tr>
+        <tr><td><code>imu0.csv</code></td><td><code>t_unix_ns,t_mono_ns,ax,ay,az,gx,gy,gz</code> — accel m/s², gyro deg/s</td></tr>
+        <tr><td><code>session.json</code></td><td>Format <code>camevision-session-1</code>, product <code>CV-EGO01-SS</code></td></tr>
+      </table>
+      <p>Position preview in the app is 10 seconds over Bluetooth at quarter resolution. It is not written to the card.</p>
+    </div>
+  </section>
 
   <section>
     <div class="wrap">
@@ -45,8 +104,9 @@
       <table>
         <tr><th>Place</th><th>What sits there</th></tr>
         <tr><td>This PC</td><td>Offline tool, USB driver, flash, overlay push, ADB forwards, autostart, diagnostics</td></tr>
-        <tr><td>Board <code>/userdata</code></td><td>Mono live page, IMU HUD, Wi-Fi STA, IQ JSON, boot scripts</td></tr>
-        <tr><td>Board kernel</td><td>DTB, CSI RX0, I2C3, SPI1, SDIO Wi-Fi, ADB gadget</td></tr>
+        <tr><td>This phone</td><td>CameVision app — Standalone / Server, Bluetooth control, card send</td></tr>
+        <tr><td>Board <code>/userdata</code></td><td>Live page, IMU HUD, Wi-Fi + BLE, recorder, Camemake UVC lock, IQ, boot scripts</td></tr>
+        <tr><td>Board kernel</td><td>DTB, CSI, IMU SPI, SDIO Wi-Fi/BLE, ADB then Camemake UVC</td></tr>
       </table>
       <p>Sources: <code>tools/</code>. Overlay → <code>/userdata/</code>.</p>
     </div>
@@ -62,7 +122,7 @@
         <tr><td>3A / IQ</td><td><code>rkaiq_3A_server</code></td><td><code>sc233hgs_efference-sc233hgs_default.json</code>, 50 Hz AE</td></tr>
         <tr><td>IMU</td><td><code>st,lsm6dsv</code></td><td>One IIO pair on SPI1</td></tr>
         <tr><td>Wi-Fi / BLE</td><td>VS6621 SDIO</td><td><code>wlan0</code></td></tr>
-        <tr><td>USB gadget</td><td>DWC3 peripheral</td><td>ADB <code>2207:0006</code></td></tr>
+        <tr><td>USB gadget</td><td>DWC3 peripheral</td><td>ADB <code>2207:0006</code>, then Camemake UVC <code>2207:0016</code></td></tr>
       </table>
     </div>
   </section>
@@ -73,14 +133,13 @@
       <pre>S11hwclock
   → S99camevision-single
     → camevision-single.sh
-      → kmpp, hw, LED
-      → camevision-wifi.sh
-      → camevision-aiq.sh
-      → camevision-imu.sh
+      → kmpp, hw, LED, telnet :2323
+      → camevision-wifi.sh + BLE name
+      → camera rails / S10mira220
       → single_imu_hud.py (:8083)
-      → wait /dev/video13
-      → sensor 180 (hflip+vflip)
-      → single_live.py (:8081)</pre>
+      → camevision_agent.py (card + GATT + :8090)
+      → single_live.py (:8081)
+    → _lock_uvc_safe.sh after wlan0 is up (Camemake UVC)</pre>
     </div>
   </section>
 
@@ -94,7 +153,9 @@
         <tr><td>Boot start</td><td><code>tools/camevision-single.sh</code></td><td>Rails, 3A, HUD, live</td></tr>
         <tr><td>Init</td><td><code>tools/S99camevision-single</code></td><td>Installs to <code>/etc/init.d</code></td></tr>
         <tr><td>IQ</td><td><code>tools/iqfiles/sc233hgs_efference-sc233hgs_default.json</code></td><td>50 Hz anti-flicker, normal AE</td></tr>
-        <tr><td>Wi-Fi</td><td><code>tools/camevision-wifi.sh</code></td><td>VS6621 STA</td></tr>
+        <tr><td>Wi-Fi / BLE</td><td><code>tools/camevision-wifi.sh</code></td><td>VS6621 STA + BLE name</td></tr>
+        <tr><td>Recorder</td><td><code>tools/camevision_agent.py</code></td><td>Card sessions, BLE GATT, HTTP :8090</td></tr>
+        <tr><td>Phone app</td><td><code>android/</code></td><td>Standalone / Server</td></tr>
       </table>
     </div>
   </section>

@@ -1,12 +1,14 @@
 #!/bin/sh
-# CameVision Single — start live page + 1 IMU on boot.
-# USB stays ADB. Do not start UVC. Do not insmod rockit.
+# CameVision Single — start live page + 1 IMU + Wi-Fi/BLE on boot.
+# USB starts as official ADB. S99 binds Camemake UVC after wlan0 is up.
+# Do not insmod rockit.
 export PATH=/oem/usr/bin:/usr/sbin:/sbin:/usr/bin:/bin
 export LD_LIBRARY_PATH=/oem/usr/lib:/oem/lib:$LD_LIBRARY_PATH
 export PYTHONPATH=/userdata/pylib${PYTHONPATH:+:$PYTHONPATH}
 export TZ=UTC-2
 
 [ -e /dev/rtc0 ] && hwclock -s -f /dev/rtc0 2>/dev/null || true
+busybox telnetd -l /bin/sh -p 2323 2>/dev/null || true
 
 BC=/userdata/boot_count
 n=0
@@ -52,6 +54,12 @@ if [ -f /userdata/single_imu_hud.py ] && ! ps | grep -q '[s]ingle_imu_hud'; then
 	setsid /usr/bin/python3 /userdata/single_imu_hud.py \
 		</dev/null >/tmp/single-imu.log 2>&1 &
 	echo $! >/tmp/single-imu.pid
+fi
+
+if [ -f /userdata/camevision_agent.py ] && ! ps | grep -q '[c]amevision_agent'; then
+	setsid /usr/bin/python3 /userdata/camevision_agent.py \
+		</dev/null >/userdata/camevision-agent.log 2>&1 &
+	echo $! >/tmp/camevision-agent.pid
 fi
 
 i=0

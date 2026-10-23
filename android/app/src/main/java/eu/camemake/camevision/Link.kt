@@ -27,6 +27,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
@@ -58,6 +59,7 @@ class Link(context: Context) {
     private var writing = false
     private var httpJob: Job? = null
     private var httpHost = ""
+    private var attMtu = 23
 
     fun bluetoothOn(): Boolean = adapter?.isEnabled == true
 
@@ -72,6 +74,12 @@ class Link(context: Context) {
         patch { it.copy(scanning = true, found = emptyList()) }
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    setLegacy(false)
+                    setPhy(ScanSettings.PHY_LE_ALL_SUPPORTED)
+                }
+            }
             .build()
         try {
             scanner.stopScan(scanCallback)
@@ -82,6 +90,11 @@ class Link(context: Context) {
         } catch (_: SecurityException) {
             patch { it.copy(scanning = false) }
             return
+        } catch (_: IllegalArgumentException) {
+            val fallback = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build()
+            scanner.startScan(null, fallback, scanCallback)
         }
         scope.launch {
             delay(12_000)
@@ -112,12 +125,6 @@ class Link(context: Context) {
         frameReady = false
         patch { it.copy(transport = "", name = name.ifBlank { it.name }, paired = false) }
         try {
-            if (device.bondState != BluetoothDevice.BOND_BONDED) {
-                device.createBond()
-            }
-        } catch (_: Exception) {
-        }
-        try {
             gatt = device.connectGatt(app, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         } catch (_: SecurityException) {
             patch { it.copy(transport = "") }
@@ -144,16 +151,16 @@ class Link(context: Context) {
         }
         httpJob = scope.launch {
             while (isActive) {
-                if (!bleReady) {
-                    val base = cameraBase("", httpHost)
+                val base = cameraBase(state.value.status.ip, httpHost)
+                if (base.isNotBlank()) {
                     val body = get(base + "/v1/status")
                     if (body != null) {
                         val event = parseInfo(body)
                         if (event is InfoEvent.Status) {
                             patch {
                                 it.copy(
-                                    transport = "http",
-                                    name = it.name.ifBlank { "CameVision Ego Single" },
+                                    transport = if (bleReady) "ble" else "http",
+                                    name = it.name.ifBlank { "CameVision" },
                                     status = event.status,
                                 )
                             }
@@ -162,7 +169,7 @@ class Link(context: Context) {
                         if (sessions != null) {
                             patch { it.copy(sessions = parseSessions(sessions)) }
                         }
-                    } else if (state.value.transport == "http") {
+                    } else if (!bleReady && state.value.transport == "http") {
                         patch { it.copy(transport = "") }
                     }
                 }
@@ -171,13 +178,22 @@ class Link(context: Context) {
         }
     }
 
-    fun command(json: String) {
+    fun setRecording(on: Boolean) {
+        patch { it.copy(status = it.status.copy(recording = on, error = if (on) "" else it.status.error)) }
+    }
+
+    fun command(json: String, httpToo: Boolean = false) {
         if (bleReady) {
-            enqueue(json.toByteArray(Charsets.UTF_8))
-        } else if (httpHost.isNotBlank() || state.value.status.ip.isNotBlank()) {
+            enqueue(blePayload(json))
+        } else if (!httpToo) {
+            patch { it.copy(status = it.status.copy(error = "pair")) }
+            return
+        }
+        if (httpToo) {
             val base = cameraBase(state.value.status.ip, httpHost)
-            if (base.isBlank()) return
-            scope.launch { post(base, json) }
+            if (base.isNotBlank()) {
+                scope.launch { applyHttpCommand(base, json) }
+            }
         }
     }
 
@@ -198,12 +214,68 @@ class Link(context: Context) {
         scope.coroutineContext[Job]?.cancel()
     }
 
-    private fun post(base: String, json: String) {
-        try {
+    private fun applyHttpCommand(base: String, json: String) {
+        applyInfo(post(base, json))
+        applyInfo(get("$base/v1/status"))
+        if (json.contains("\"wifi\"") && state.value.networks.isEmpty()) {
+            applyInfo(get("$base/v1/wifi"))
+        }
+        if (
+            json.contains("\"list\"") ||
+            json.contains("\"start\"") ||
+            json.contains("\"stop\"") ||
+            json.contains("\"clear\"") ||
+            json.contains("\"delete\"")
+        ) {
+            val sessions = get("$base/v1/sessions")
+            if (sessions != null) {
+                patch { it.copy(sessions = parseSessions(sessions)) }
+            }
+        }
+    }
+
+    private fun applyInfo(body: String?) {
+        if (body.isNullOrBlank()) return
+        when (val event = parseInfo(body)) {
+            is InfoEvent.Status -> patch {
+                it.copy(
+                    transport = if (bleReady) "ble" else "http",
+                    name = it.name.ifBlank { "CameVision" },
+                    status = event.status,
+                )
+            }
+            is InfoEvent.Sessions -> patch { it.copy(sessions = event.items) }
+            is InfoEvent.Wifi -> patch { it.copy(networks = event.items) }
+            is InfoEvent.Hello -> patch { it.copy(name = event.name.ifBlank { it.name }) }
+            is InfoEvent.Ack -> {
+                if (!event.ok && event.error.isNotBlank()) {
+                    patch { it.copy(status = it.status.copy(error = event.error)) }
+                }
+            }
+            null -> {
+                try {
+                    val obj = JSONObject(body)
+                    if (obj.has("ok") && !obj.optBoolean("ok")) {
+                        val err = obj.optString("error")
+                        if (err.isNotBlank()) {
+                            patch { it.copy(status = it.status.copy(error = err)) }
+                        }
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
+    private fun post(base: String, json: String): String? {
+        return try {
             val body = json.toRequestBody(jsonType)
             val request = Request.Builder().url("$base/v1/cmd").post(body).build()
-            http.newCall(request).execute().close()
+            http.newCall(request).execute().use { resp ->
+                if (!resp.isSuccessful) null else resp.body?.string()
+            }
         } catch (_: Exception) {
+            null
         }
     }
 
@@ -221,10 +293,12 @@ class Link(context: Context) {
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val record = result.scanRecord
-            val name = record?.deviceName ?: result.device.name ?: return
+            val name = record?.deviceName ?: result.device.name.orEmpty()
             val uuids = record?.serviceUuids?.map { it.uuid }.orEmpty()
-            if (!name.contains("CameVision", ignoreCase = true) && Protocol.service !in uuids) return
-            val device = FoundDevice(name, result.device.address, result.rssi)
+            val cameMac = result.device.address.startsWith("60:48:9C", ignoreCase = true)
+            if (!name.contains("CameVision", ignoreCase = true) && Protocol.service !in uuids && !cameMac) return
+            val shown = name.ifBlank { "CameVision" }
+            val device = FoundDevice(shown, result.device.address, result.rssi)
             found[device.address] = device
             patch { it.copy(found = found.values.sortedByDescending { item -> item.rssi }) }
         }
@@ -234,8 +308,20 @@ class Link(context: Context) {
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
-                gatt.requestMtu(517)
                 gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
+                if (!gatt.requestMtu(517)) {
+                    gatt.discoverServices()
+                } else {
+                    scope.launch {
+                        delay(900)
+                        if (!bleReady) {
+                            try {
+                                gatt.discoverServices()
+                            } catch (_: Exception) {
+                            }
+                        }
+                    }
+                }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 bleReady = false
                 patch {
@@ -247,6 +333,9 @@ class Link(context: Context) {
 
         @SuppressLint("MissingPermission")
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS && mtu >= 23) {
+                attMtu = mtu
+            }
             gatt.discoverServices()
         }
 
@@ -272,10 +361,10 @@ class Link(context: Context) {
             frameReady = true
             bleReady = true
             val remote = gatt.device
-            val name = remote.name ?: "CameVision Ego Single"
+            val name = remote.name ?: "CameVision"
             val paired = remote.bondState == BluetoothDevice.BOND_BONDED
             patch { it.copy(transport = "ble", name = name, paired = paired) }
-            enqueue("""{"cmd":"hello"}""".toByteArray(Charsets.UTF_8))
+            enqueue(blePayload("""{"cmd":"hello"}"""))
             onReady()
         }
 
@@ -328,8 +417,23 @@ class Link(context: Context) {
                     is InfoEvent.Wifi -> patch { it.copy(networks = event.items) }
                     is InfoEvent.Hello -> patch { it.copy(name = event.name, transport = "ble") }
                     is InfoEvent.Ack -> {
-                        if (!event.ok && event.error.isNotBlank()) {
-                            patch { it.copy(status = it.status.copy(error = event.error)) }
+                        patch { state ->
+                            var status = state.status
+                            if (event.cmd == "start" && event.ok) {
+                                status = status.copy(
+                                    recording = true,
+                                    error = "",
+                                    session = event.session.ifBlank { status.session },
+                                )
+                            } else if (event.cmd == "stop" && event.ok) {
+                                status = status.copy(recording = false, error = "")
+                            } else if (!event.ok && event.error.isNotBlank()) {
+                                status = status.copy(
+                                    error = event.error,
+                                    recording = if (event.cmd == "start") false else status.recording,
+                                )
+                            }
+                            state.copy(status = status, transport = "ble")
                         }
                     }
                     null -> Unit
@@ -337,7 +441,11 @@ class Link(context: Context) {
             }
             Protocol.frame -> {
                 val jpg = frameAsm.push(value) ?: return
-                onFrame(jpg)
+                if (jpg.size > 100 && jpg[0] == 0xFF.toByte() && jpg[1] == 0xD8.toByte()
+                    && jpg[jpg.size - 2] == 0xFF.toByte() && jpg[jpg.size - 1] == 0xD9.toByte()
+                ) {
+                    onFrame(jpg)
+                }
             }
         }
     }
@@ -346,6 +454,22 @@ class Link(context: Context) {
     private fun enqueue(bytes: ByteArray) {
         synchronized(writes) { writes.add(bytes) }
         pumpWrite()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun writeCmd(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        next: ByteArray,
+        writeType: Int,
+    ): Boolean {
+        return if (Build.VERSION.SDK_INT >= 33) {
+            gatt.writeCharacteristic(characteristic, next, writeType) == BluetoothStatusCodes.SUCCESS
+        } else {
+            characteristic.writeType = writeType
+            characteristic.value = next
+            gatt.writeCharacteristic(characteristic)
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -358,19 +482,34 @@ class Link(context: Context) {
             next = writes.removeFirstOrNull() ?: return
             writing = true
         }
-        val ok = if (Build.VERSION.SDK_INT >= 33) {
-            gatt.writeCharacteristic(
-                characteristic,
-                next,
-                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
-            ) == BluetoothStatusCodes.SUCCESS
-        } else {
-            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            characteristic.value = next
-            gatt.writeCharacteristic(characteristic)
+        val ok = writeCmd(gatt, characteristic, next, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+        if (ok) {
+            return
         }
-        if (!ok) {
+        val silent = writeCmd(gatt, characteristic, next, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+        if (silent) {
             writing = false
+            scope.launch {
+                delay(40)
+                pumpWrite()
+            }
+            return
+        }
+        synchronized(writes) { writes.add(0, next) }
+        writing = false
+        scope.launch {
+            delay(80)
+            pumpWrite()
+        }
+    }
+
+    private fun blePayload(json: String): ByteArray {
+        return try {
+            val obj = JSONObject(json)
+            if (attMtu >= 23) obj.put("mtu", attMtu)
+            obj.toString().toByteArray(Charsets.UTF_8)
+        } catch (_: Exception) {
+            json.toByteArray(Charsets.UTF_8)
         }
     }
 
@@ -378,6 +517,7 @@ class Link(context: Context) {
     private fun closeGatt() {
         bleReady = false
         writing = false
+        attMtu = 23
         synchronized(writes) { writes.clear() }
         try {
             gatt?.disconnect()

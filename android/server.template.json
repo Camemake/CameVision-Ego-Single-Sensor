@@ -1,10 +1,10 @@
 {
   "base_url": "https://server.example.com/camevision/v1",
   "token": "",
-  "product": "CV-EGO01-SS",
-  "profile": "single",
+  "product": "from-board",
+  "profile": "from-board",
   "format": "camevision-session-1",
-  "note": "Replace base_url in the app Setup tab. The value saved there is the server that receives recordings. Leave token empty when that server is open.",
+  "note": "Replace base_url in the app Setup tab. The value saved there is the server that receives recordings. Leave token empty when that server is open. Product and profile come from the connected board.",
   "calls": {
     "open_session": "POST {base_url}/sessions",
     "file": "POST {base_url}/sessions/{id}/files",
@@ -12,7 +12,7 @@
   },
   "headers": {
     "Authorization": "Bearer {token}   (omit when the server is open)",
-    "X-CameVision-Product": "CV-EGO01-SS",
+    "X-CameVision-Product": "{board product}",
     "X-CameVision-Session": "{id}",
     "X-CameVision-Path": "session.json | imu0.csv | cam0/video.mp4"
   }

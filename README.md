@@ -17,6 +17,8 @@
   ·
   <a href="https://www.camemake.eu/robotic-solutions"><strong>Camemake robotic solutions</strong></a>
   ·
+  <a href="https://github.com/Camemake/CameVision-App"><strong>CameVision App</strong></a>
+  ·
   <a href="https://github.com/Camemake/CameVision-Ego"><strong>CameVision Ego (stereo)</strong></a>
   ·
   <a href="https://www.camemake.eu">camemake.eu</a>
@@ -26,7 +28,7 @@
 
 **CameVision Ego Single Sensor** is one global-shutter camera, one IMU, an on-board vision processor with NPU, USB, Wi-Fi 6, BLE, eMMC and battery support.
 
-This repository is the **open demo software** that ships with the product. The live page and IMU HUD run **on the camera**. The host only flashes and opens a browser. USB stays **ADB**.
+This repository is the **open demo firmware** that ships with the product. USB starts as **ADB**. After Wi-Fi is up, the Mono / MIRA220 release binds the **Camemake** UVC gadget (`2207:0016`) and mounts the microSD card. Preview and record on the phone go over Bluetooth through the separate [CameVision App](https://github.com/Camemake/CameVision-App). The live page is a lab view, not a UVC substitute.
 
 ## Product
 
@@ -40,7 +42,7 @@ This repository is the **open demo software** that ships with the product. The l
 | Wired | USB (developer / ADB gadget) · USB-C |
 | Wireless | Wi-Fi 6 + BLE |
 | Power | USB-C and battery pads |
-| Software | This GitHub demo (on-board live page, IMU HUD) |
+| Software | This firmware (UVC + BLE + recorder) · [CameVision App](https://github.com/Camemake/CameVision-App) |
 | Applications | SLAM, VIO, robotics, tool cameras, egocentric and spatial AI |
 
 Maskrom kits in this tree: **SC233HGS** and **AM / MIRA220**. Other shop sensors: [sales@camemake.com](mailto:sales@camemake.com).
@@ -65,6 +67,8 @@ python tools/cv_single_page.py
 
 Need: `git lfs pull` after clone (oem / rootfs / userdata). No system Python — `host/python` ships in the tree. Linux extracts `host/linux/python-*.tar.gz` on first run.
 
+After flash, the camera has three options: **Camemake UVC** over USB (`2207:0016`, MJPEG 1400×1600 and the SD card as a drive), the phone app in **Standalone**, or the phone app in **Server** mode. App source and 0.1 APK: [CameVision-App](https://github.com/Camemake/CameVision-App). The server field starts as a template (`android/server.template.json`).
+
 Full map: [`FLASH.md`](FLASH.md) · [flash.html](https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html)
 Board nets: [`HARDWARE.md`](HARDWARE.md).
 
@@ -75,12 +79,15 @@ CameVision-Single.exe           Windows installer (bundled Python)
 CameVision-Single / .sh         Linux installer
 docs/                           GitHub Pages (this product)
   index.html                    Overview
+  app.html                      CameVision demo app · 0.1
+  software.html                 UVC, Standalone, Server
   flash.html                    Maskrom partition map
   datasheet.html                SKU table · IMU precision
-tools/                          Flash, overlay, live, IMU, IQ, modules
+android/                        Phone app source (canonical repo: CameVision-App)
+tools/                          Flash, overlay, live, IMU, recorder, IQ, modules
 restore/known-good-20260819-camera-adb/   SPL, env, uboot, oem, rootfs
 restore/known-good-20260903-single-camera/  SC233 boot FIT + overlay
-restore/release-1.0-mono-mira220-20261014/  MIRA220 boot FIT + overlay
+restore/release-1.1-mono-mira220-20261023/  MIRA220 boot FIT + Wi-Fi/BLE + Camemake UVC
 host/python                     Windows Python 3.12 embed
 ```
 
@@ -107,6 +114,7 @@ Read the family on **[Camemake robotic solutions](https://www.camemake.eu/roboti
 | [Shop](https://www.camemake.eu/shop/camevision-ego-single-sensor-4547) | Camemake shop · CV-EGO01-SS |
 | [Product page](https://camemake.github.io/CameVision-Ego-Single-Sensor/) | Public GitHub Pages site |
 | [中文](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/) | Chinese product pages |
+| [App](https://camemake.github.io/CameVision-Ego-Single-Sensor/app.html) | CameVision phone app · 0.1 |
 | [Get started](https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html) | USB, package, ADB |
 | [Flash](https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html) | Maskrom, partition map |
 | [Datasheet](https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html) | SKU table · IMU precision |

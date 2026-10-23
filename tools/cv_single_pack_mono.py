@@ -61,16 +61,22 @@ def _copy_tree(src: Path, dst: Path) -> None:
 def write_docs(rel: Path) -> None:
     (rel / "SENSOR").write_text("MIRA220\n", encoding="ascii")
     (rel / "BOARD").write_text("MONO\n", encoding="ascii")
-    (rel / "VERSION").write_text("1.0-mono-mira220\n", encoding="ascii")
+    (rel / "VERSION").write_text("1.1-mono-mira220\n", encoding="ascii")
     (rel / "RELEASE.md").write_text(
-        """# CameVision Mono · MIRA220 · 1.0 — 14 October 2026
+        """# CameVision Mono · MIRA220 · 1.1 — 23 October 2026
 
-This folder is the **Mono / MIRA220** kit. It is **not** the SC233HGS
-Single kit (`restore/known-good-20260903-single-camera`) and **not** Ego
-stereo. Do not flash one onto the other.
+This is the current **Mono / MIRA220** release. It replaces the 1.0 kit
+and the later Wi-Fi/BLE and UVC restore points. It is **not** the
+SC233HGS Single kit (`restore/known-good-20260903-single-camera`) and
+**not** Ego stereo. Do not flash one onto the other.
 
 Hardware: CameVisionMono_OV V0.3, one AMS MIRA220 (1600×1400 RAW10, GRBG),
-one LSM6 on SPI0. Live view is 1400×1600 after 90° CCW. USB stays **ADB**.
+one LSM6 on SPI0. Live view is 1400×1600 after 90° CCW.
+
+USB starts as official **ADB** (`2207:0006`). After Wi-Fi is up, boot
+binds the **Camemake** UVC gadget (`2207:0016`, MJPEG 1400×1600). Official
+S50 stays on disk so a reboot without Wi-Fi comes back as ADB. Telnet
+`:2323` is the shell while UVC holds USB.
 
 ```
 python tools/cv_single_flash.py --package camevision-mono
@@ -80,8 +86,8 @@ python tools/cv_single_overlay_deploy_am.py
 | Partition | Image |
 |---|---|
 | env / idblock / uboot | same RV1126B SPL set as Ego AM |
-| boot | `camevision_boot_mono.img` (MIRA220 DTB; CAM1 unused) |
-| userdata | Mono overlay (CIF CAM0, mira modules, MIRA220 IQ) |
+| boot | `camevision_boot_mono_wifi.img` (WIFI_RST GPIO0_A0, wake B6/B7) |
+| userdata | Mono overlay (CIF CAM0, mira, Wi-Fi/BLE, Camemake UVC) |
 | oem / rootfs | CameVision `oem_noko.img` / `rootfs_bootstable.img` |
 
 Overlay:
@@ -92,32 +98,40 @@ Overlay:
 - IQ `mira220_camevision-mira220_default.json`
 - Color decoder `libsingle_color.so` (`ego_raw10_color_nv12`)
 - Exposure 3600, vblank 2695, VSTART 0 (re-applied after stream-on)
+- Wi-Fi + BLE on the VS6621 shared antenna (SHARE NV + 48-byte NVDS)
+- Bluetooth name `CameVision Ego Single` + last 6 MAC hex digits
+- Camemake UVC via `_lock_uvc_safe.sh` + `camevision-uvc-bridge.py`
 
 ## Do not
 
 - Flash this kit onto a SC233HGS board
 - Use `tools/cv_single_flash.py` without `--package camevision-mono`
 - Ship `ego_stereo.py` or start a second camera
-- Switch USB to a webcam gadget
+- Persist `uvc-webcam.on` or leave a stub S50 on disk
+- Copy SHARE (220 B) over `sv6160lite.nvbin`
+- Flash gen1 serial `0558fa189447bc45`
 """,
         encoding="utf-8",
     )
     (rel / "FLASH.md").write_text(
         """# CameVision Mono / MIRA220 · Maskrom flash
 
-Empty Mono AM board. USB stays **ADB**.
+Empty Mono AM board. Writes the wifi-pad boot FIT so VS6621 Wi-Fi + BLE
+come up. After first boot, Camemake UVC binds when `wlan0` has an address.
 
 ```
 python tools/cv_single_flash.py --package camevision-mono
 ```
 
-Board already running: `restore-mono.ps1` or
-`python tools/cv_single_overlay_deploy_am.py`.
+Board already running ADB: `restore-mono.ps1` or
+`python tools/cv_single_overlay_deploy_am.py`. Then reboot (or run
+`/userdata/_lock_uvc_safe.sh` over telnet) for the webcam gadget.
 """,
         encoding="utf-8",
     )
     (rel / "restore-mono.ps1").write_text(
-        """# Push CameVision Mono / MIRA220 overlay. USB stays ADB.
+        """# Push CameVision Mono / MIRA220 overlay (Wi-Fi + BLE + Camemake UVC).
+# Deploy stays on ADB. Reboot binds UVC after Wi-Fi is up.
 $ErrorActionPreference = "Stop"
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location $root
@@ -145,11 +159,16 @@ def stage_overlay(stg: Path) -> None:
         "S11hwclock": TOOLS / "S11hwclock",
         "camemake-logo.png": TOOLS / "camemake-logo.png",
         "camevision-wifi.sh": first_file(TOOLS / "camevision-wifi.sh", ov / "camevision-wifi.sh"),
+        "camevision-ble.sh": first_file(TOOLS / "camevision-ble.sh", ov / "camevision-ble.sh"),
         "wpa_camevision.conf": first_file(TOOLS / "wpa_camevision.conf", ov / "wpa_camevision.conf"),
         "camevision-hw.sh": first_file(TOOLS / "camevision-hw.sh", ov / "camevision-hw.sh"),
         "camevision-led.sh": first_file(TOOLS / "camevision-led.sh", ov / "camevision-led.sh"),
         "S50usbdevice": first_file(ov / "S50usbdevice", cur / "overlay" / "S50usbdevice"),
         "S99camevision": TOOLS / "S99camevision-single",
+        "_lock_uvc_safe.sh": TOOLS / "_lock_uvc_safe.sh",
+        "camevision-uvc-bridge.py": TOOLS / "camevision-uvc-bridge.py",
+        "camevision-uvc-start.sh": TOOLS / "camevision-uvc-start.sh",
+        "camevision-uvc-stop.sh": TOOLS / "camevision-uvc-stop.sh",
     }
     for name, src in mapping.items():
         if src is not None and Path(src).is_file():
@@ -210,6 +229,18 @@ def verify_kit(rel: Path) -> None:
     for ko in AM_KOS:
         if not (ov / "modules" / ko).is_file():
             raise SystemExit(f"Mono overlay missing {ko}")
+    if not (ov / "camevision-ble.sh").is_file():
+        raise SystemExit("Mono overlay missing camevision-ble.sh")
+    if not (ov / "_lock_uvc_safe.sh").is_file():
+        raise SystemExit("Mono overlay missing _lock_uvc_safe.sh")
+    if not (ov / "camevision-uvc-bridge.py").is_file():
+        raise SystemExit("Mono overlay missing camevision-uvc-bridge.py")
+    wifi_boot = rel / "camevision_boot_mono_wifi.img"
+    if wifi_boot.is_file() and not boot_ok_am(wifi_boot.read_bytes()):
+        raise SystemExit("wifi-pad boot FIT failed MIRA220 check")
+    nv = ov / "swt6621_fw" / "sv6160lite.nvbin"
+    if not nv.is_file() or nv.stat().st_size == 220:
+        raise SystemExit("Mono overlay missing real 48-byte sv6160lite.nvbin")
     live = (ov / "single_live.py").read_text(encoding="utf-8", errors="replace")
     if "LIVE_EXPOSURE = 3600" not in live or "VIEW_W, VIEW_H" not in live:
         raise SystemExit("single_live.py is not the Ego AM color path")
@@ -252,15 +283,17 @@ def pack_kit() -> Path:
         _copy(dts, REL / "device-tree" / dts.name)
     sha256sums(REL)
     verify_kit(REL)
-    (ROOT / "restore" / "CURRENT-MONO.txt").write_text(
+    pointer = (
         f"{AM_RELEASE}\n"
-        "This is the current CameVision Mono / MIRA220 restore point.\n"
-        "One MIRA220 1600x1400 RAW10 on /dev/video1, view 1400x1600.\n"
+        "CameVision Mono / MIRA220 release 1.1.\n"
+        "Wi-Fi + BLE + Camemake UVC (1400x1600 MJPEG).\n"
         "Product path: python tools/cv_single_flash.py --package camevision-mono\n"
-        "Live page :8081, IMU :8083. USB stays ADB.\n"
-        "Do not flash gen1 serial 0558fa189447bc45.\n",
-        encoding="ascii",
+        "Live page :8081, IMU :8083. Boot ADB, then UVC after Wi-Fi.\n"
+        "Do not flash gen1 serial 0558fa189447bc45.\n"
     )
+    (ROOT / "restore" / "CURRENT-MONO.txt").write_text(pointer, encoding="ascii")
+    (ROOT / "restore" / "CURRENT-WIFI-BLE.txt").write_text(pointer, encoding="ascii")
+    (ROOT / "restore" / "CURRENT-UVC.txt").write_text(pointer, encoding="ascii")
     return REL
 
 

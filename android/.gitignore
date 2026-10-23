@@ -1,4 +1,5 @@
 .gradle/
+.kotlin/
 build/
 local.properties
 .idea/
@@ -6,4 +7,6 @@ local.properties
 .DS_Store
 gradle-8.9/
 gradle-8.9-bin.zip
-CameVision.apk
+*.apk
+app/build/
+

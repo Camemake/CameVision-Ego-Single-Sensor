@@ -59,6 +59,13 @@ TOOL_FILES = (
     "camevision-led.sh",
     "camevision-imu.sh",
     "camevision-diag.sh",
+    "camevision-uvc-bridge.py",
+    "camevision-usb-sd.sh",
+    "camevision-ble.py",
+    "camevision-ble.sh",
+    "camevision-sd.sh",
+    "camevision_dbus.py",
+    "_lock_uvc_safe.sh",
     "S99camevision-single",
     "S11hwclock",
     "camemake-logo.png",
@@ -75,25 +82,36 @@ README = """CameVision Ego Single Sensor · offline installer
 Windows:  double-click CameVision-Single.exe
 Linux:    open CameVision-Single or CameVision-Single.sh
 
-The Camemake window installs Python, ADB, the flash tool, and USB access.
-
 The tool opens at http://127.0.0.1:8765/tool.html
+Chinese pages: http://127.0.0.1:8765/zh/tool.html
 
 USB / Maskrom
   Install USB driver. Hold BOOT, tap RESET, keep BOOT held.
 
 Package
-  Select CameVision Ego Single Sensor, or load a GitHub update / a zip.
+  Select CameVision Ego Single Sensor · SC233HGS or · MIRA220.
   Install. Writes loader, env, idblock, U-Boot, boot,
   userdata, oem, rootfs, and the overlay.
   Release BOOT when the board starts.
   Do not flash gen1 serial 0558fa189447bc45.
 
-ADB
-  Open: live page http://127.0.0.1:8081/  (one camera pane + 1 IMU)
-  Extended diagnostics: full board dump in the log.
+After install — video methods
+  1. Camemake UVC  USB webcam 2207:0016. MJPEG
+     1400x1600 / 1050x1200 / 700x800 / 350x400 at 60/30/15.
+     Composite gadget also mounts the microSD card.
+     Reboot without Wi-Fi comes back as ADB 2207:0006.
+  2. Standalone    CameVision phone app over Bluetooth.
+     Full-res H.264 + IMU on the card.
+  3. Server        Same app. Camera uploads over its Wi-Fi.
+  Live page :8081 is a lab view, not a substitute.
 
-Same path on an empty board and on a board that already has images.
+Phone app
+  https://github.com/Camemake/CameVision-App  release 0.1
+  Pages: docs/app.html  and  docs/zh/app.html
+
+ADB
+  Open: live page http://127.0.0.1:8081/
+  Extended diagnostics: full board dump in the log.
 """
 
 
@@ -258,7 +276,7 @@ def main() -> int:
             if name in ("CameVision-Single.sh", "CameVision-Single"):
                 os.chmod(OUT / name, 0o755)
     (OUT / "README.txt").write_text(README, encoding="utf-8")
-    (OUT / "VERSION").write_text("CameVision-Single-Offline 0.1\n", encoding="ascii")
+    (OUT / "VERSION").write_text("CameVision-Single-Offline 1.1\n", encoding="ascii")
 
     if ZIP.exists():
         ZIP.unlink()
@@ -324,7 +342,11 @@ def _verify_pack(out: Path) -> None:
             "mechanical.html",
             "optics.html",
             "software.html",
+            "app.html",
             "datasheet.html",
+            "zh/app.html",
+            "zh/tool.html",
+            "zh/software.html",
         ):
             if not (docs / name).is_file():
                 raise SystemExit(f"packed docs missing {name}")

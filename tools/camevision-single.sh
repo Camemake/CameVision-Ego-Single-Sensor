@@ -1,6 +1,7 @@
 #!/bin/sh
-# CameVision Single — start live page + 1 IMU on boot.
-# USB stays ADB. Do not start UVC. Do not insmod rockit.
+# CameVision Single — start live page + 1 IMU + Wi-Fi/BLE on boot.
+# USB starts as official ADB. S99 binds Camemake UVC after wlan0 is up.
+# Do not insmod rockit.
 export PATH=/oem/usr/bin:/usr/sbin:/sbin:/usr/bin:/bin
 export LD_LIBRARY_PATH=/oem/usr/lib:/oem/lib:$LD_LIBRARY_PATH
 export PYTHONPATH=/userdata/pylib${PYTHONPATH:+:$PYTHONPATH}

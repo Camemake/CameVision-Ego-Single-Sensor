@@ -35,6 +35,7 @@ import eu.camemake.camevision.CaptureMode
 import eu.camemake.camevision.LinkState
 import eu.camemake.camevision.R
 import eu.camemake.camevision.TransferState
+import eu.camemake.camevision.frontTitle
 import kotlinx.coroutines.delay
 
 @Composable
@@ -48,7 +49,6 @@ fun RecordScreen(
 ) {
     val status = link.status
     val draft by model.draft.collectAsState()
-    val saved by model.saved.collectAsState()
     val started by model.recordStarted.collectAsState()
     val online = draft.mode == CaptureMode.Online
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -68,7 +68,7 @@ fun RecordScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            stringResource(R.string.product_title),
+            frontTitle(link.transport == "ble", status, link.name),
             color = CameInk,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 26.sp,
@@ -76,15 +76,23 @@ fun RecordScreen(
         )
         Spacer(Modifier.height(22.dp))
         RecordButton(recording = status.recording) {
-            if (link.transport.isEmpty() && saved.host.isBlank()) onConnect() else model.toggleRecord()
+            model.toggleRecord()
         }
         Spacer(Modifier.height(12.dp))
         Text(
-            if (status.recording) stringResource(R.string.recording) else stringResource(R.string.ready),
+            if (status.recording) stringResource(R.string.recording) else stringResource(R.string.start_recording),
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
             color = CameInk,
         )
+        if (status.recording) {
+            Text(
+                stringResource(R.string.stop_recording),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = CameMuted,
+            )
+        }
         if (status.recording) {
             val elapsed = formatElapsed(now - started)
             val size = if (status.width > 0 && status.height > 0) {
@@ -126,12 +134,14 @@ fun RecordScreen(
         Spacer(Modifier.height(16.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             QuietButton(stringResource(R.string.preview), Modifier.weight(1f)) { model.startPreview() }
-            val sendLabel = stringResource(if (online) R.string.send_leftovers else R.string.send)
-            if (status.sdWarn && !online) {
-                PinkButton(sendLabel, Modifier.weight(1f), onSend)
-            } else {
-                QuietButton(sendLabel, Modifier.weight(1f), onSend)
-            }
+            QuietButton(stringResource(R.string.qr_trigger), Modifier.weight(1f)) { model.openQr() }
+        }
+        Spacer(Modifier.height(10.dp))
+        val sendLabel = stringResource(if (online) R.string.send_leftovers else R.string.send)
+        if (status.sdWarn && !online) {
+            PinkButton(sendLabel, Modifier.fillMaxWidth(), onSend)
+        } else {
+            QuietButton(sendLabel, Modifier.fillMaxWidth(), onSend)
         }
         Spacer(Modifier.height(12.dp))
     }

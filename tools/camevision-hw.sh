@@ -35,8 +35,16 @@ else
 	export_out 8 1 PWR_EN_2.8V
 	export_out 9 1 PWR_EN_1.5V
 fi
-# GPIO2_A4 WIFI_SOC_PWCTL / HOST_WAKE_WL
-export_out 68 1 WIFI_SOC_PWCTL
+if [ -f /userdata/camevision-am.on ]; then
+	# Ego / AM 2g4p: HOST_WAKE_WL is GPIO3_B6. Do not drive Single GPIO2_A4.
+	export_out 110 1 HOST_WAKE_WL
+else
+	# GPIO2_A4 WIFI_SOC_PWCTL / HOST_WAKE_WL
+	export_out 68 1 WIFI_SOC_PWCTL
+fi
 sleep 0.05
+if [ -x /userdata/camevision-sd.sh ]; then
+	/userdata/camevision-sd.sh || true
+fi
 log "HW_RAILS_READY"
 exit 0

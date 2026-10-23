@@ -19,6 +19,7 @@ class ConfigStore(private val context: Context) {
     private val mode = stringPreferencesKey("mode")
     private val host = stringPreferencesKey("host")
     private val address = stringPreferencesKey("address")
+    private val qr = stringPreferencesKey("qr")
 
     val config: Flow<AppConfig> = context.camevisionStore.data.map { prefs ->
         AppConfig(
@@ -28,8 +29,9 @@ class ConfigStore(private val context: Context) {
             psk = prefs[psk] ?: "",
             warn = prefs[warn] ?: 85,
             mode = modeOf(prefs[mode]),
-            host = prefs[host] ?: "",
+            host = prefs[host] ?: "192.168.1.72",
             address = prefs[address] ?: "",
+            qr = prefs[qr] ?: "camevision-trigger",
         )
     }
 
@@ -43,6 +45,7 @@ class ConfigStore(private val context: Context) {
             prefs[mode] = cfg.mode.wire()
             prefs[host] = cfg.host.trim()
             prefs[address] = cfg.address
+            prefs[qr] = cfg.qr.trim().ifBlank { "camevision-trigger" }
         }
     }
 

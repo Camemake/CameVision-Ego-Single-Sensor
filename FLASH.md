@@ -1,14 +1,15 @@
 # Flash from Maskrom — CameVision Ego Single Sensor
 
-Empty board or a board that already has images. USB stays ADB
-(`2207:0006` after boot). Do not switch to a UVC webcam.
+Empty board or a board that already has images. SC233 stays ADB
+(`2207:0006`). Mono / MIRA220 boots ADB, then binds Camemake UVC
+(`2207:0016`) after Wi-Fi is up.
 
 ## Kits
 
 | Package | Restore | Boot image | Sensor |
 |---|---|---|---|
 | `camevision-single` | `restore/known-good-20260903-single-camera` | `camevision_boot.img` | SC233HGS `/dev/video13` |
-| `camevision-mono` | `restore/release-1.0-mono-mira220-20261014` | `camevision_boot_mono.img` | MIRA220 `/dev/video1` |
+| `camevision-mono` | `restore/release-1.1-mono-mira220-20261023` | `camevision_boot_mono_wifi.img` | MIRA220 `/dev/video1` |
 
 Shared SPL / oem / rootfs: `restore/known-good-20260819-camera-adb`.
 
@@ -52,7 +53,7 @@ Do not flash gen1 serial `0558fa189447bc45`.
 | `0x0` | `env.img` | U-Boot env |
 | `0x40` | `idblock.img` | idblock |
 | `0x440` | `uboot.img` | U-Boot |
-| `0x2440` | `camevision_boot.img` or `camevision_boot_mono.img` | Kernel + DTB FIT (`6.1.141-rt52`) |
+| `0x2440` | `camevision_boot.img` or `camevision_boot_mono_wifi.img` | Kernel + DTB FIT (`6.1.141-rt52`) |
 | `0x7C40` | `userdata.img` | Skeleton, then ADB overlay |
 | `0x207C40` | `oem_noko.img` | oem libs, rkaiq bits |
 | `0x607C40` | `rootfs_bootstable.img` | Root filesystem |
@@ -79,16 +80,18 @@ upgrade_tool wl 0x607C40 restore/known-good-20260819-camera-adb/rootfs_bootstabl
 upgrade_tool rd
 ```
 
-For Mono, write `restore/release-1.0-mono-mira220-20261014/camevision_boot_mono.img`
+For Mono, write `restore/release-1.1-mono-mira220-20261023/camevision_boot_mono_wifi.img`
 at `0x2440` instead.
 
 ## After first boot
 
 | Check | Expect |
 |---|---|
-| ADB | `adb devices` shows a serial that is not `0558fa189447bc45` |
+| ADB | `adb devices` shows a serial that is not `0558fa189447bc45` (before Mono UVC bind) |
 | SC233 live | `/stat` → 1920×1200 NV12, `/dev/video13` |
 | Mono live | `/stat` → 1400×1600 BG10, `/dev/video1`, ~30 fps |
+| Mono UVC | Windows Camera **Camemake** `2207:0016` MJPEG 1400×1600 |
+| Mono wireless | `wlan0` STA + BLE name `CameVision Ego Single` + last 6 MAC hex |
 | Mono regs | VSTART `0x107D`=0, exp `0x100C`=3600, vblank `0x1012`=2695 |
 | IMU | `:8083` → `imu0` on SPI1 (Single) or `spi0.0` (Mono), \|a\| ≈ 1 g |
 

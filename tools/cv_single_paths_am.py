@@ -10,10 +10,12 @@ from pathlib import Path
 
 from cv_single_paths import first_file, repo_root
 
-AM_RELEASE = "release-1.0-mono-mira220-20261014"
+AM_RELEASE = "release-1.1-mono-mira220-20261023"
 EGO_AM_RELEASE = "release-2.0-am-mira220-20261009"
 BOOT_NAME = "camevision_boot_mono.img"
+BOOT_WIFI_NAME = "camevision_boot_mono_wifi.img"
 BOOT_NAMES = (
+    BOOT_WIFI_NAME,
     BOOT_NAME,
     "camevision_boot_single_am.img",
     "camevision_boot_ego_am.img",

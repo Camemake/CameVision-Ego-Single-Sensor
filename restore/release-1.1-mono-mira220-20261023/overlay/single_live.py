@@ -54,6 +54,14 @@ PORT = 8081
 IMU_URL = "http://127.0.0.1:8083/"
 TJ = "/oem/usr/lib/libturbojpeg.so"
 LOGO = "/userdata/camemake-logo.png"
+LIVE_JPG = "/tmp/camevision-live.jpg"
+RECORD_FLAG = "/tmp/camevision-record.on"
+RECORD_FIFO = "/tmp/camevision-nv12.fifo"
+RECORD_GEOM = "/tmp/camevision-record.geom"
+AIM_FLAG = "/tmp/camevision-aim.on"
+AIM_JPG = "/tmp/camevision-aim.jpg"
+UVC_CTL = "/tmp/camevision-uvc-ctl.json"
+UVC_JPG = "/tmp/camevision-uvc.jpg"
 CAP_FPS = 60
 NATIVE = None
 
@@ -222,28 +230,47 @@ class TurboEnc:
             self.lib.tjFree(jpeg_buf)
 
 
+_I2C_LOCK = threading.Lock()
+
+
 def _i2c_wr16(bus: int, reg: int, val: int) -> None:
-    fd = os.open("/dev/i2c-%d" % bus, os.O_RDWR)
-    try:
-        fcntl.ioctl(fd, I2C_SLAVE_FORCE, 0x54)
-        os.write(fd, bytes([reg >> 8, reg & 0xFF, val & 0xFF, val >> 8]))
-    finally:
-        os.close(fd)
+    with _I2C_LOCK:
+        fd = os.open("/dev/i2c-%d" % bus, os.O_RDWR)
+        try:
+            fcntl.ioctl(fd, I2C_SLAVE_FORCE, 0x54)
+            os.write(fd, bytes([reg >> 8, reg & 0xFF, val & 0xFF, val >> 8]))
+        finally:
+            os.close(fd)
 
 
 def _i2c_rd16(bus: int, reg: int) -> int:
-    fd = os.open("/dev/i2c-%d" % bus, os.O_RDWR)
+    with _I2C_LOCK:
+        fd = os.open("/dev/i2c-%d" % bus, os.O_RDWR)
+        try:
+            fcntl.ioctl(fd, I2C_SLAVE_FORCE, 0x54)
+            os.write(fd, bytes([reg >> 8, reg & 0xFF]))
+            b = os.read(fd, 2)
+            return b[0] | (b[1] << 8)
+        finally:
+            os.close(fd)
+
+
+def load_uvc_ctl() -> dict:
     try:
-        fcntl.ioctl(fd, I2C_SLAVE_FORCE, 0x54)
-        os.write(fd, bytes([reg >> 8, reg & 0xFF]))
-        b = os.read(fd, 2)
-        return b[0] | (b[1] << 8)
-    finally:
-        os.close(fd)
+        import json
+
+        with open(UVC_CTL, "r") as fh:
+            got = json.load(fh)
+        if isinstance(got, dict):
+            shared["_uvc_ctl"] = got
+            return got
+    except Exception:
+        pass
+    return shared.get("_uvc_ctl") or {}
 
 
 def set_live_30fps() -> None:
-    """Keep Ego AM window + exposure on the sensor.
+    """Keep Ego AM window + the UVC / live exposure on the sensor.
 
     The mira220 driver rewrites VSTART=64 and EXP=1000 on stream-on.
     VSTART≠0 slides 64 dummy rows into the frame; after 90° CCW that is
@@ -251,27 +278,48 @@ def set_live_30fps() -> None:
     """
     if not AM:
         return
+    ctl = load_uvc_ctl()
+    fps = int(ctl.get("fps") or 30)
+    if fps not in (15, 30, 60):
+        fps = 30
+    line_us = 8.14
+    frame_lines = int(round(1000000.0 / (fps * line_us)))
+    vblank = max(16, frame_lines - CAM_H)
+    pl = int(ctl.get("powerline") or 0)
+    period_us = 10000 if pl == 1 else 8333 if pl == 2 else 0
+    if int(ctl.get("ae") or 1) == 2:
+        exp = 3600 if fps <= 30 else 1800
+        if int(ctl.get("backlight") or 0):
+            exp = int(exp * 1.25)
+        if period_us:
+            exp_us_a = max(period_us, int((int(exp * line_us) + period_us / 2) / period_us) * period_us)
+            exp = exp_us_a / line_us
+        exp = min(frame_lines - 8, int(exp))
+    else:
+        exp_us = max(100, int(ctl.get("exposure") or 300) * 100)
+        if period_us:
+            exp_us = max(period_us, int((exp_us + period_us / 2) / period_us) * period_us)
+        exp = max(8, min(frame_lines - 8, int(exp_us / line_us)))
     try:
-        # Full 1600×1400 active array. Same regs as Ego AM CAM0.
         _i2c_wr16(3, 0x107D, 0)
         _i2c_wr16(3, 0x200A, 0)
         _i2c_wr16(3, 0x1087, CAM_H)
         _i2c_wr16(3, 0x2008, CAM_W // 2)
         _i2c_wr16(3, 0x207D, CAM_W)
-        _i2c_wr16(3, 0x100C, LIVE_EXPOSURE)
-        _i2c_wr16(3, 0x1012, LIVE_VBLANK)
-        _i2c_wr16(3, 0x1103, LIVE_VBLANK)
+        _i2c_wr16(3, 0x100C, exp)
+        _i2c_wr16(3, 0x1012, vblank)
+        _i2c_wr16(3, 0x1103, vblank)
         vstart = _i2c_rd16(3, 0x107D)
-        exp = _i2c_rd16(3, 0x100C)
-        vblank = _i2c_rd16(3, 0x1012)
-        if not shared.get("_fps30") or shared.get("_mira_vstart") != vstart:
+        got_exp = _i2c_rd16(3, 0x100C)
+        got_vb = _i2c_rd16(3, 0x1012)
+        sig = (got_exp, got_vb, vstart, fps)
+        if shared.get("_mira_sig") != sig:
             print(
-                "mira220: exp %d vblank %d vstart %d vsize %d"
-                % (exp, vblank, vstart, _i2c_rd16(3, 0x1087)),
+                "mira220: exp %d vblank %d vstart %d fps %d"
+                % (got_exp, got_vb, vstart, fps),
                 flush=True,
             )
-            shared["_fps30"] = True
-            shared["_mira_vstart"] = vstart
+            shared["_mira_sig"] = sig
     except Exception as exc:
         print("mira220 fps", exc, flush=True)
 
@@ -281,20 +329,38 @@ _LUT_R_C = _LUT_G_C = _LUT_B_C = None
 
 
 def _awb_lut_c():
-    """Same 10-bit AWB LUTs as Ego AM: R×1.90 G×1.38 B×3.06, black-10."""
-    global _LUT_R_C, _LUT_G_C, _LUT_B_C
-    if _LUT_R_C is None:
-        import numpy as np
+    """Official Ego AM ISP: R×1.90 G×1.38 B×3.06, black-10.
 
-        x = np.arange(1024, dtype=np.int16)
-        u8 = np.clip((x >> 2) - 10, 0, 255).astype(np.int16)
-        r = np.ascontiguousarray(np.clip(u8 * 1.90, 0, 255).astype(np.uint8))
-        g = np.ascontiguousarray(np.clip(u8 * 1.38, 0, 255).astype(np.uint8))
-        b = np.ascontiguousarray(np.clip(u8 * 3.06, 0, 255).astype(np.uint8))
-        _LUT_R_C = (c_ubyte * 1024).from_buffer(r)
-        _LUT_G_C = (c_ubyte * 1024).from_buffer(g)
-        _LUT_B_C = (c_ubyte * 1024).from_buffer(b)
-        shared["_awb_keep"] = (r, g, b)
+    UVC sliders only lift and gain after that AWB. Rebuilding the color
+    matrix from contrast/gamma/saturation made a green picture.
+    """
+    global _LUT_R_C, _LUT_G_C, _LUT_B_C
+    ctl = shared.get("_uvc_ctl") or {}
+    gain = (int(ctl.get("gain") or 32) + 32) / 64.0
+    bright = int(ctl.get("brightness") or 0)
+    sig = (gain, bright)
+    if _LUT_R_C is not None and shared.get("_lut_sig") == sig:
+        return _LUT_R_C, _LUT_G_C, _LUT_B_C
+    r = bytearray(1024)
+    g = bytearray(1024)
+    b = bytearray(1024)
+    for x in range(1024):
+        u8 = (x >> 2) - 10 + bright
+        if u8 < 0:
+            u8 = 0
+        elif u8 > 255:
+            u8 = 255
+        rr = int(u8 * 1.90 * gain)
+        gg = int(u8 * 1.38 * gain)
+        bb = int(u8 * 3.06 * gain)
+        r[x] = 255 if rr > 255 else rr
+        g[x] = 255 if gg > 255 else gg
+        b[x] = 255 if bb > 255 else bb
+    _LUT_R_C = (c_ubyte * 1024).from_buffer(r)
+    _LUT_G_C = (c_ubyte * 1024).from_buffer(g)
+    _LUT_B_C = (c_ubyte * 1024).from_buffer(b)
+    shared["_awb_keep"] = (r, g, b)
+    shared["_lut_sig"] = sig
     return _LUT_R_C, _LUT_G_C, _LUT_B_C
 
 
@@ -575,18 +641,114 @@ def grab() -> None:
         time.sleep(0.05)
 
 
+def aim_size(sw: int, sh: int):
+    # Quarter of the live frame for the 10 s Bluetooth preview.
+    dw = max(2, (sw // 2) // 2 * 2)
+    dh = max(2, (sh // 2) // 2 * 2)
+    return dw, dh
+
+
+def shrink_nv12(src, sw: int, sh: int, dw: int, dh: int):
+    if not isinstance(src, (bytes, bytearray)):
+        src = bytes(src)
+    ysz = sw * sh
+    if len(src) < ysz + ysz // 2:
+        return None
+    uv = src[ysz:]
+    out = bytearray(dw * dh * 3 // 2)
+    for oy in range(dh):
+        srow = (oy * sh // dh) * sw
+        drow = oy * dw
+        for ox in range(dw):
+            out[drow + ox] = src[srow + (ox * sw // dw)]
+    suw, suh = sw // 2, sh // 2
+    duw, duh = dw // 2, dh // 2
+    base = dw * dh
+    for oy in range(duh):
+        sy = oy * suh // duh
+        for ox in range(duw):
+            si = (sy * suw + (ox * suw // duw)) * 2
+            di = base + (oy * duw + ox) * 2
+            out[di] = uv[si]
+            out[di + 1] = uv[si + 1]
+    return out
+
+
+def _write_jpg(path: str, jpg: bytes) -> None:
+    tmp = path + ".tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    try:
+        os.write(fd, jpg)
+    finally:
+        os.close(fd)
+    os.replace(tmp, path)
+
+
 def encode_loop(enc: TurboEnc) -> None:
     last = None
+    aw, ah = aim_size(VIEW_W, VIEW_H)
+    try:
+        aim = TurboEnc(aw, ah, 50)
+    except Exception:
+        aim = None
+    aim_t = 0.0
+    uvc_enc = None
+    uvc_wh = None
     while True:
         frame = shared.get("cam0")
         if frame is None or frame is last:
             time.sleep(0.005)
             continue
         last = frame
+        load_uvc_ctl()
         jpg = enc.encode(frame)
         if jpg:
             shared["jpg"] = jpg
             shared["jpg_t"] = time.monotonic()
+            try:
+                _write_jpg(LIVE_JPG, jpg)
+            except OSError:
+                pass
+        ctl = shared.get("_uvc_ctl") or {}
+        tw = int(ctl.get("w") or 0)
+        th = int(ctl.get("h") or 0)
+        if tw > 0 and th > 0 and (tw, th) != (VIEW_W, VIEW_H):
+            if uvc_wh != (tw, th):
+                try:
+                    uvc_enc = TurboEnc(tw, th, 70)
+                except Exception:
+                    uvc_enc = None
+                uvc_wh = (tw, th)
+            if uvc_enc is not None:
+                small = shrink_nv12(frame, VIEW_W, VIEW_H, tw, th)
+                if small:
+                    uj = uvc_enc.encode(small)
+                    if uj:
+                        try:
+                            _write_jpg(UVC_JPG, uj)
+                        except OSError:
+                            pass
+        elif jpg:
+            try:
+                _write_jpg(UVC_JPG, jpg)
+            except OSError:
+                pass
+        if aim is None or not os.path.exists(AIM_FLAG):
+            continue
+        now = time.monotonic()
+        if now - aim_t < 0.45:
+            continue
+        aim_t = now
+        small = shrink_nv12(frame, VIEW_W, VIEW_H, aw, ah)
+        if not small:
+            continue
+        aim_jpg = aim.encode(small)
+        if not aim_jpg or len(aim_jpg) > 96000:
+            continue
+        try:
+            _write_jpg(AIM_JPG, aim_jpg)
+        except OSError:
+            pass
 
 
 def _ps_has(name: str) -> bool:
@@ -702,6 +864,7 @@ def handle(conn: socket.socket) -> None:
                     "t": time.strftime("%Y-%m-%dT%H:%M:%S"),
                     "fmt": "BG10" if AM else "NV12",
                     "sku": "mira220" if AM else "sc233hgs",
+                    "uvc": shared.get("_uvc_ctl") or {},
                 }
             ).encode()
             send(conn, body, "application/json")
@@ -722,6 +885,62 @@ def handle(conn: socket.socket) -> None:
             conn.close()
         except Exception:
             pass
+
+
+def publish_record_geom() -> None:
+    fps = int(round(float(shared.get("cam0_fps") or 30)))
+    if fps < 1 or fps > 120:
+        fps = 30
+    text = "%d %d %d\n" % (VIEW_W, VIEW_H, fps)
+    try:
+        tmp = RECORD_GEOM + ".tmp"
+        with open(tmp, "w") as fh:
+            fh.write(text)
+        os.replace(tmp, RECORD_GEOM)
+    except OSError:
+        pass
+
+
+def record_pump() -> None:
+    """While a recording is on, write every full-resolution NV12 frame to the fifo."""
+    fifo = None
+    last = None
+    while True:
+        if not os.path.exists(RECORD_FLAG):
+            if fifo is not None:
+                try:
+                    fifo.close()
+                except OSError:
+                    pass
+                fifo = None
+            last = None
+            time.sleep(0.05)
+            continue
+        publish_record_geom()
+        frame = shared.get("cam0")
+        if frame is None or frame is last:
+            time.sleep(0.002)
+            continue
+        if fifo is None:
+            try:
+                fifo = open(RECORD_FIFO, "wb", buffering=0)
+            except OSError:
+                time.sleep(0.05)
+                continue
+        try:
+            payload = bytes(frame)
+            if len(payload) != VIEW_FRAME:
+                last = frame
+                continue
+            fifo.write(payload)
+            last = frame
+        except OSError:
+            try:
+                fifo.close()
+            except OSError:
+                pass
+            fifo = None
+            last = None
 
 
 def serve() -> None:
@@ -770,6 +989,7 @@ def main() -> int:
     ensure_companions()
     threading.Thread(target=companion_loop, daemon=True).start()
     threading.Thread(target=grab, daemon=True).start()
+    threading.Thread(target=record_pump, daemon=True).start()
     try:
         enc = TurboEnc(VIEW_W, VIEW_H, 70)
         threading.Thread(target=encode_loop, args=(enc,), daemon=True).start()

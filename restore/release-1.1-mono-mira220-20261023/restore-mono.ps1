@@ -1,4 +1,5 @@
-# Push CameVision Mono / MIRA220 overlay. USB stays ADB.
+# Push CameVision Mono / MIRA220 overlay (Wi-Fi + BLE + Camemake UVC).
+# Deploy stays on ADB. Reboot binds UVC after Wi-Fi is up.
 $ErrorActionPreference = "Stop"
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location $root

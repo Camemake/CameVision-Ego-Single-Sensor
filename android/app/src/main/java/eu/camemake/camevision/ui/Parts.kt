@@ -89,6 +89,7 @@ fun bannerText(code: String): Pair<String, Boolean>? {
         "unreachable" -> stringResource(R.string.err_unreachable)
         "wifi" -> stringResource(R.string.err_wifi)
         "bluetooth" -> stringResource(R.string.err_bluetooth)
+        "pair" -> stringResource(R.string.err_pair)
         "permission" -> stringResource(R.string.connect_permission)
         else -> code
     }

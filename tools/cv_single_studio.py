@@ -123,6 +123,12 @@ def status() -> dict[str, object]:
         "page_ready": page_ready(),
         "usb": usb,
         "job": job,
+        "use": [
+            {"id": "uvc", "title": "Camemake UVC", "where": "USB"},
+            {"id": "standalone", "title": "Standalone", "where": "phone app"},
+            {"id": "online", "title": "Server", "where": "phone app"},
+        ],
+        "server_template": "https://server.example.com/camevision/v1",
     }
 
 
@@ -272,6 +278,17 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/src/"):
             self._send_src(path[5:])
             return
+        if path == "/android/server.template.json":
+            tmpl = ROOT / "android" / "server.template.json"
+            if tmpl.is_file():
+                data = tmpl.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
         if path == "/" and (DOCS / "tool.html").is_file():
             self.path = "/tool.html"
         super().do_GET()

@@ -19,6 +19,10 @@ sensor and is ignored. A CAM0-only FIT from
 | CAM0_ILU_TRIG | GPIO4_A3 | illuminator, **not** PWDN |
 | SPI0 CLK/CS/MISO/MOSI | GPIO5_A6/A3/A5/A4 | LSM6DSV320XTR |
 | IMU0_INT1 | GPIO5_B5 | DRDY |
+| SDMMC0 CLK/CMD/D0-D3 | GPIO2_A4/A5/A0-A3 | microSD, 3.3 V I/O |
+| vcc3v3_sd | GPIO3_B4 enable from vcc3v3_sys | card VDD 3.3 V (node still named vcc1v8-sd) |
+
+microSD is `sdmmc0` (`mmc@21d60000`). Program **3.3 V / 3.3 V** (`vmmc` + `vqmmc`). Do not use `vcc_1v8` or `sd-uhs-*` — those switch card I/O to 1.8 V and the card never enumerates. Do not mux `SDMMC0_DET` (GPIO0_A5, green LED) or `SDMMC0_PWREN` (GPIO0_B2, CAM0 DVDD). Use `broken-cd`.
 
 Do not copy Ego's 2.8 / 1.2 / 1.8 V regulator names onto this BOM.
 Do not copy Ego CAM0_PWDN on GPIO4_A3.

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CameVision Ego Single</string>
+    <string name="app_name">CameVision</string>
     <string name="brand">Camemake</string>
-    <string name="product_title">CameVision Ego Single</string>
-    <string name="product_sub">Single sensor</string>
-    <string name="about_product">CameVision Ego Single</string>
-    <string name="about_sku">CV-EGO01-SS · one camera, one IMU</string>
+    <string name="product_title">CameVision</string>
+    <string name="product_sub">Camera control</string>
+    <string name="about_product">CameVision</string>
+    <string name="about_sku">Works with CameVision boards</string>
     <string name="server_template" translatable="false">https://server.example.com/camevision/v1</string>
 
     <string name="tab_record">Record</string>
@@ -28,6 +28,8 @@
 
     <string name="ready">Ready</string>
     <string name="recording">Recording</string>
+    <string name="start_recording">Start recording</string>
+    <string name="stop_recording">Stop recording</string>
     <string name="record_action">Record</string>
     <string name="stop_action">Stop</string>
     <string name="stat_line">%1$s · %2$s · IMU %3$d Hz</string>
@@ -76,6 +78,7 @@
     <string name="bt_pair">Pair</string>
     <string name="bt_forget">Forget</string>
     <string name="bt_paired">Paired</string>
+    <string name="http_linked">Linked over Wi-Fi</string>
     <string name="server_label">Server</string>
     <string name="token_label">Token</string>
     <string name="token_hint">Leave empty when the server is open.</string>
@@ -92,6 +95,20 @@
     <string name="saved_sent">Saved, and sent to the camera.</string>
     <string name="open_wifi">Open Wi-Fi settings</string>
     <string name="about">About</string>
+    <string name="about_sku_line">%1$s · %2$s</string>
+    <string name="about_sensors_one">one camera, one IMU</string>
+    <string name="about_sensors_two">two cameras, one IMU</string>
+    <string name="about_fw">Firmware %1$s</string>
+    <string name="about_board">Board %1$s</string>
+    <string name="about_sensor">%1$s · %2$s · %3$d sensors</string>
+    <string name="about_protocol">Protocol %1$d</string>
+    <string name="about_app">App 0.1</string>
+    <string name="qr_trigger">QR</string>
+    <string name="qr_title">Trigger code</string>
+    <string name="qr_label">Trigger QR</string>
+    <string name="qr_hint">Shown on Record. Point the camera at this code to trigger.</string>
+    <string name="qr_value">QR text</string>
+    <string name="qr_empty">Add QR text in Setup.</string>
 
     <string name="transfer_title">Sending to the server</string>
     <string name="transfer_progress">%1$d of %2$d</string>
@@ -108,7 +125,8 @@
     <string name="err_server_template">Add your server in Setup. The address there is still the template.</string>
     <string name="err_upload">The camera could not reach the server. Recordings stay on the card.</string>
     <string name="err_session">That recording is not on the card.</string>
-    <string name="err_unreachable">The phone cannot reach the camera. Connect both to the Wi-Fi in Setup, then try again.</string>
+    <string name="err_unreachable">The phone cannot reach the camera over Bluetooth. Pair it in Setup, then try again.</string>
+    <string name="err_pair">Pair the camera in Setup. Preview and record use Bluetooth.</string>
     <string name="err_wifi">The camera could not save the Wi-Fi settings.</string>
     <string name="err_bluetooth">Bluetooth is off.</string>
     <string name="err_generic">Something went wrong. Try again.</string>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>应用 · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision 演示应用：蓝牙预览与录像、存储卡、二维码触发、服务器上传。可用于 Ego Single 与 Ego。">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="icon" href="../assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="../assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>单传感器 · 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">产品</a>
+        <a href="start.html">入门</a>
+        <a href="flash.html">烧录</a>
+        <a href="hardware.html">硬件</a>
+        <a href="mechanical.html">结构</a>
+        <a href="optics.html">光学</a>
+        <a href="software.html">软件</a>
+        <a class="active" href="app.html">应用</a>
+        <a href="datasheet.html">规格书</a>
+      </nav>
+      <div class="lang"><a href="../app.html">EN</a><a class="on" href="app.html">中文</a></div>
+      <a class="buy" href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">购买</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">演示应用 · 0.1</div>
+      <h1>CameVision 应用</h1>
+      <p class="lead">一块手机应用对应多块 CameVision 板。预览和录像走蓝牙。未连接时标题为 CameVision，连上后显示该板自己的标题。</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/Camemake/CameVision-App/releases/tag/0.1">下载 0.1</a>
+        <a class="btn" href="https://github.com/Camemake/CameVision-App">源码</a>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>应用界面</h2>
+      <div class="shots">
+        <figure class="shot">
+          <img src="../assets/app-record.png" alt="录像页：开始录像与定位预览">
+          <figcaption>录像 — 开始 / 录像中 / 停止，定位预览，二维码触发</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../assets/app-card.png" alt="存储卡页：容量与会话">
+          <figcaption>存储卡 — 剩余空间、会话列表、清空与删除</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../assets/app-setup.png" alt="设置页：配对、服务器、Wi-Fi、关于">
+          <figcaption>设置 — 配对、服务器、相机 Wi-Fi、关于</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>能控制什么</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>录像</strong>
+          开始录像、录像中、停止录像。全分辨率 H.264 与 IMU 写在 microSD。定位预览是蓝牙上的实时 JPEG，不是 MP4。
+        </div>
+        <div class="card">
+          <strong>存储卡</strong>
+          剩余 / 已用空间、会话列表、删除一条、全部清空。卡快满时提醒。
+        </div>
+        <div class="card">
+          <strong>设置</strong>
+          蓝牙配对与忘记。服务器地址与可选令牌。相机 Wi-Fi。关于页读取板标题、固件、SKU、传感器数量、协议。
+        </div>
+        <div class="card">
+          <strong>二维码触发</strong>
+          录像页可选显示。在设置里填写文本。把相机对准该码即可触发。
+        </div>
+      </div>
+      <p>扫描匹配名称含 <code>CameVision</code>，或 GATT <code>6c9a0001-1a6f-4e84-8a00-63616d657631</code>。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>取像方式</h2>
+      <p>板上有四条图像路径。USB Camemake UVC 不是应用里的页面。</p>
+      <table>
+        <tr><th>方式</th><th>路径</th><th>得到什么</th></tr>
+        <tr><td><b>Camemake UVC</b></td><td>USB · Windows / Linux 相机应用</td><td>MJPEG 网络摄像头。全分辨率。见 <a href="software.html#uvc">UVC</a>。</td></tr>
+        <tr><td><b>定位</b></td><td>蓝牙 JPEG</td><td>本应用里的实时预览。不写入存储卡。</td></tr>
+        <tr><td><b>录像</b></td><td>蓝牙开始/停止 · 卡上 MP4</td><td>全分辨率 H.264 + <code>imu0.csv</code> 写在 microSD。</td></tr>
+        <tr><td><b>服务器</b></td><td>蓝牙开始/停止 · 相机 Wi-Fi 上传</td><td>同一套卡文件。有网时相机上传。卡是缓冲。</td></tr>
+        <tr><td>现场页</td><td>浏览器 <code>:8081</code></td><td>板上的实验室预览。不能代替 UVC 或本应用。</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>安装</h2>
+      <ol>
+        <li>安装 <a href="https://github.com/Camemake/CameVision-App/releases/download/0.1/CameVision-0.1-debug.apk">CameVision 0.1</a>（调试 APK）。</li>
+        <li>打开相机。配对 <b>CameVision</b> + MAC 后 6 位（例如 <code>CameVision-462C47</code>）。</li>
+        <li>录像和定位走蓝牙。只有使用服务器模式时，才在设置里填写真实服务器地址。</li>
+      </ol>
+      <p class="muted">源码与后续版本：<a href="https://github.com/Camemake/CameVision-App">Camemake/CameVision-App</a>。本板固件仍在本仓库。</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div>
+      <div><a href="https://github.com/Camemake/CameVision-App">CameVision-App</a></div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -325,3 +325,50 @@ pre {
 .pill.bad { color: #c0392b; }
 
 #log { min-height: 280px; max-height: 640px; }
+
+.shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+.shot {
+  margin: 0;
+  text-align: center;
+}
+.shot img {
+  width: 100%;
+  max-width: 280px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #111;
+}
+.shot figcaption {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.tabs a {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+.tabs a:hover, .tabs a.on {
+  background: var(--came);
+  color: #fff;
+  border-color: var(--came);
+  text-decoration: none;
+}

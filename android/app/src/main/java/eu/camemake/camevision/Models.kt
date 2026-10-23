@@ -34,7 +34,28 @@ data class CameraStatus(
     val sent: Int = 0,
     val preview: Boolean = false,
     val error: String = "",
+    val product: String = "",
+    val sku: String = "",
+    val profile: String = "single",
+    val title: String = "",
+    val fw: String = "",
+    val protocol: Int = 0,
+    val sensors: Int = 1,
+    val sensor: String = "",
+    val imuCount: Int = 1,
+    val nativeW: Int = 0,
+    val nativeH: Int = 0,
+    val boardId: String = "",
 )
+
+fun CameraStatus.displayTitle(): String = title.trim()
+
+fun frontTitle(connected: Boolean, status: CameraStatus, bleName: String = ""): String {
+    if (!connected) return "CameVision"
+    return status.title.trim().ifBlank { bleName.trim() }.ifBlank { "CameVision" }
+}
+
+fun CameraStatus.isStereo(): Boolean = profile == "stereo" || profile == "ego" || profile == "dual" || sensors >= 2
 
 data class SessionRow(
     val id: String,
@@ -58,8 +79,9 @@ data class AppConfig(
     val psk: String = "",
     val warn: Int = 85,
     val mode: CaptureMode = CaptureMode.Standalone,
-    val host: String = "",
+    val host: String = "192.168.1.72",
     val address: String = "",
+    val qr: String = "camevision-trigger",
 )
 
 data class WifiNet(
@@ -87,11 +109,13 @@ data class TransferState(
     val error: String = "",
 )
 
+const val DEFAULT_HOST = "192.168.1.72"
+
 fun cameraBase(ip: String, hostField: String): String {
-    val raw = ip.ifBlank { hostField }.trim()
-    if (raw.isEmpty()) return ""
+    val raw = ip.ifBlank { hostField }.ifBlank { DEFAULT_HOST }.trim()
     val bare = raw.removePrefix("http://").removePrefix("https://").trimEnd('/')
     val hostPort = bare.substringBefore("/")
+    if (hostPort.isBlank()) return "http://$DEFAULT_HOST:8090"
     val withPort = if (hostPort.contains(":")) hostPort else "$hostPort:8090"
     return "http://$withPort"
 }

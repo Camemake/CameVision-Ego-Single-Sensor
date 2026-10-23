@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>离线工具 · CameVision Ego Single Sensor · Camemake</title>
+  <meta name="description" content="CameVision Ego Single Sensor 离线安装：USB、镜像包、ADB。">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="icon" href="../assets/camemake-logo.png">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <a class="plate" href="index.html"><img src="../assets/camemake-logo.png" alt="Camemake"></a>
+      <div class="titles">
+        <b>CameVision Ego</b>
+        <span>单传感器 · 1 IMU</span>
+      </div>
+      <nav>
+        <a href="index.html">产品</a>
+        <a href="start.html">入门</a>
+        <a href="flash.html">烧录</a>
+        <a href="hardware.html">硬件</a>
+        <a href="mechanical.html">结构</a>
+        <a href="optics.html">光学</a>
+        <a href="software.html">软件</a>
+        <a href="app.html">应用</a>
+        <a href="datasheet.html">规格书</a>
+      </nav>
+      <div class="lang"><a href="../tool.html">EN</a><a class="on" href="tool.html">中文</a></div>
+      <a class="buy" href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">购买</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="wrap">
+      <div class="kicker">离线安装程序</div>
+      <h1>CameVision Ego Single Sensor</h1>
+      <p class="lead">USB、镜像包、ADB。然后用 Camemake UVC，或用手机应用的 Standalone / Server。</p>
+      <p id="ready" class="muted">正在检查本地文件…</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap steps">
+      <article class="step">
+        <div class="step-num">USB</div>
+        <h2>Maskrom</h2>
+        <ol>
+          <li>接上 USB-C 并供电。</li>
+          <li>安装本软件包自带的 USB 驱动。</li>
+          <li>按住 <strong>BOOT</strong>，点按 <strong>RESET</strong>，继续按住 BOOT。</li>
+          <li>日志出现 Maskrom 或 Loader 后继续。</li>
+        </ol>
+        <div class="step-actions">
+          <button class="primary" id="btn-driver" type="button">安装 USB 驱动</button>
+        </div>
+        <p id="step1-note" class="muted"></p>
+      </article>
+      <article class="step">
+        <div class="step-num">镜像</div>
+        <h2>安装</h2>
+        <p>写入 loader、env、idblock、U-Boot、boot、userdata、oem、rootfs 与 overlay。</p>
+        <label class="pkg-label" for="pkg">镜像包</label>
+        <select id="pkg"></select>
+        <div class="file-row">
+          <button type="button" id="btn-github">GitHub 更新</button>
+          <label class="file-btn" for="pkg-file">镜像文件</label>
+          <input id="pkg-file" type="file" accept=".zip">
+        </div>
+        <div class="step-actions">
+          <button class="primary" id="btn-install" type="button">安装</button>
+        </div>
+        <p class="muted">写入结束、板子启动后松开 BOOT。</p>
+      </article>
+      <article class="step">
+        <div class="step-num">ADB</div>
+        <h2>打开</h2>
+        <p>USB 转发与现场页 <code>http://127.0.0.1:8081/</code>。</p>
+        <div class="step-actions">
+          <button class="primary" id="btn-page" type="button">打开</button>
+          <button type="button" id="btn-diag">扩展诊断</button>
+          <button type="button" id="btn-stop" hidden>停止</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>使用相机</h2>
+      <p>安装后有三种方式。后两种是手机应用（<a href="app.html">CameVision 0.1</a>）。</p>
+      <div class="grid">
+        <div class="card">
+          <strong>1 · Camemake UVC</strong>
+          插入 USB，用 Windows 相机打开 Camemake。全分辨率。不需要手机。Wi-Fi 起来后绑定该 gadget，并挂载 SD 卡。
+        </div>
+        <div class="card">
+          <strong>2 · Standalone</strong>
+          配对 CameVision + MAC 后 6 位。蓝牙录像到卡。经手机传到 Setup 里的服务器。
+        </div>
+        <div class="card">
+          <strong>3 · Server</strong>
+          同一应用。相机用自己的 Wi-Fi 上传。把模板地址换成你的服务器。
+        </div>
+      </div>
+      <p class="muted">UVC：Camemake <code>2207:0016</code>，MJPEG 1400×1600 / 1050×1200 / 700×800 / 350×400，60/30/15。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>日志</h2>
+      <pre id="log">等待本地工具…</pre>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div>
+      <div>本地工具 · 127.0.0.1</div>
+    </div>
+  </footer>
+  <script>
+    const logEl = document.getElementById("log");
+    const readyEl = document.getElementById("ready");
+    const note1 = document.getElementById("step1-note");
+    const pkgEl = document.getElementById("pkg");
+    const fileEl = document.getElementById("pkg-file");
+    const buttons = {
+      driver: document.getElementById("btn-driver"),
+      install: document.getElementById("btn-install"),
+      page: document.getElementById("btn-page"),
+      github: document.getElementById("btn-github"),
+      diag: document.getElementById("btn-diag"),
+      stop: document.getElementById("btn-stop"),
+    };
+    let lastPkg = "";
+    async function post(path, body) {
+      await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+    }
+    buttons.driver.onclick = () => post("/api/driver");
+    buttons.install.onclick = () => post("/api/install", { package: pkgEl.value || "camevision-single" });
+    buttons.page.onclick = () => post("/api/page");
+    buttons.github.onclick = () => post("/api/update-github");
+    buttons.diag.onclick = () => post("/api/diag");
+    buttons.stop.onclick = () => post("/api/stop");
+    fileEl.onchange = async () => {
+      if (!fileEl.files || !fileEl.files[0]) return;
+      const fd = new FormData();
+      fd.append("file", fileEl.files[0], fileEl.files[0].name);
+      await fetch("/api/update-file", { method: "POST", body: fd });
+    };
+    function pill(ok, label) {
+      return `<span class="pill ${ok ? "ok" : "bad"}">${label}</span>`;
+    }
+    function fillPackages(list) {
+      const ids = (list || []).map((p) => p.id).join("|");
+      if (ids === lastPkg) return;
+      lastPkg = ids;
+      const keep = pkgEl.value;
+      pkgEl.innerHTML = "";
+      (list || []).forEach((p) => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        pkgEl.appendChild(opt);
+      });
+      if (keep && [...pkgEl.options].some((o) => o.value === keep)) pkgEl.value = keep;
+    }
+    async function tick() {
+      try {
+        const r = await fetch("/api/status", { cache: "no-store" });
+        const s = await r.json();
+        const usb = s.usb || {};
+        const inMaskrom = !!(usb.maskrom || usb.loader);
+        const adbUp = !!(usb.adb && usb.adb.length);
+        fillPackages(s.packages);
+        const busy = !!(s.job && s.job.running);
+        const jobName = (s.job && s.job.name) || "job";
+        readyEl.innerHTML =
+          (busy ? pill(true, "进行中: " + jobName) : "") +
+          pill(s.driver_present, s.os === "windows" ? "包内驱动" : "包内 udev") +
+          pill(inMaskrom, inMaskrom ? "Maskrom" : "等待 Maskrom") +
+          pill(adbUp, adbUp ? "ADB " + usb.adb[0] : "ADB") +
+          `<span class="muted"> ${s.root}</span>`;
+        note1.textContent = busy
+          ? jobName + " 正在运行。先停止再点其他按钮。"
+          : (s.os === "windows"
+            ? "本包含 Rockchip Driver Assistant。Windows 可能要求管理员。"
+            : "本包含 USB 厂商 2207 的 udev 规则。Linux 可能要求密码。");
+        buttons.stop.hidden = !busy;
+        buttons.stop.disabled = false;
+        ["driver", "install", "page", "github", "diag"].forEach((k) => { buttons[k].disabled = busy; });
+        if (s.log && s.log.length) {
+          logEl.textContent = s.log.join("\n");
+          logEl.scrollTop = logEl.scrollHeight;
+        }
+      } catch (e) {
+        readyEl.innerHTML = pill(false, "请从离线工具打开本页");
+        logEl.textContent = "本页需要本地工具。\n\nWindows：打开 CameVision-Single.exe\nLinux：打开 CameVision-Single";
+        Object.values(buttons).forEach((b) => { b.disabled = true; });
+      }
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>

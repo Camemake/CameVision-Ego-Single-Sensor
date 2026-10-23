@@ -1,0 +1,6 @@
+release-1.1-mono-mira220-20261023
+CameVision Mono / MIRA220 release 1.1.
+Wi-Fi + BLE + Camemake UVC (1400x1600 MJPEG).
+Product path: python tools/cv_single_flash.py --package camevision-mono
+Live page :8081, IMU :8083. Boot ADB, then UVC after Wi-Fi.
+Do not flash gen1 serial 0558fa189447bc45.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>软件 · CameVision Ego Single Sensor · Camemake</title>
-  <meta name="description" content="CameVision Ego Single Sensor 软件：现场页与 IMU HUD。">
+  <meta name="description" content="CameVision Ego Single Sensor 软件：Camemake UVC、手机应用 Standalone 与 Server、现场页、离线工具。">
   <link rel="stylesheet" href="../assets/style.css">
   <link rel="icon" href="../assets/camemake-logo.png">
 </head>
@@ -24,30 +24,100 @@
         <a href="mechanical.html">结构</a>
         <a href="optics.html">光学</a>
         <a class="active" href="software.html">软件</a>
+        <a href="app.html">应用</a>
         <a href="datasheet.html">规格书</a>
       </nav>
       <div class="lang"><a href="../software.html">EN</a><a class="on" href="software.html">中文</a></div>
       <a class="buy" href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">购买</a>
     </div>
   </header>
+
   <div class="hero">
     <div class="wrap">
+      <div class="kicker">本软件包</div>
       <h1>软件</h1>
-      <p class="lead">单画面现场页与一颗 IMU HUD 在板上运行。主机负责烧录与 ADB 转发。</p>
+      <p class="lead">三种用法：USB Camemake UVC、手机应用 Standalone、手机应用 Server。现场页是实验室预览，不能代替这三种。</p>
     </div>
   </div>
+
   <section>
     <div class="wrap">
+      <h2>三种方式</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>1 · Camemake UVC</strong>
+          插入 USB。Windows 相机打开 <b>Camemake</b>（<code>2207:0016</code>），全分辨率 MJPEG。不需要手机。MIRA220 为 1400×1600。无 Wi-Fi 重启后回到 ADB。
+        </div>
+        <div class="card">
+          <strong>2 · Standalone</strong>
+          CameVision 应用通过蓝牙开始/停止录像。图像与 IMU 写在 microSD。手机把文件传到 Setup 里的服务器。卡快满时会提醒。可从应用清空录像。
+        </div>
+        <div class="card">
+          <strong>3 · Server</strong>
+          同一应用、同一套卡文件。相机用自己的 Wi-Fi 上传。卡是断网缓冲。服务器地址在 Setup，初始为模板 <code>https://server.example.com/camevision/v1</code>。
+        </div>
+      </div>
+      <p class="muted">手机应用：<a href="app.html">应用</a> 与 <a href="https://github.com/Camemake/CameVision-App">CameVision-App</a>。录像服务：<code>tools/camevision_agent.py</code>。扫描名称含 <code>CameVision</code> + MAC 后 6 位。</p>
+    </div>
+  </section>
+
+  <section id="uvc">
+    <div class="wrap">
+      <h2>Camemake UVC</h2>
+      <p>Wi-Fi 起来后，USB 是复合设备：<b>Camemake</b> 摄像头 + microSD 磁盘。无 Wi-Fi 重启后回到 ADB <code>2207:0006</code>。</p>
+      <table>
+        <tr><th></th><th>值</th></tr>
+        <tr><td>VID:PID</td><td><code>2207:0016</code> · 产品名 Camemake</td></tr>
+        <tr><td>类别</td><td>复合 0/0/0 · UVC IAD + 大容量存储</td></tr>
+        <tr><td>格式</td><td>MJPEG</td></tr>
+        <tr><td>分辨率 × 帧率</td><td>1400×1600 · 1050×1200 · 700×800 · 350×400，各 60 / 30 / 15</td></tr>
+        <tr><td>控制</td><td>曝光、亮度、对比度、增益、伽马、自动曝光、电源频率、白平衡</td></tr>
+        <tr><td>存储卡</td><td>Windows / Linux 挂载 FAT（会话在 <code>camevision/sessions/</code>）</td></tr>
+        <tr><td>图像</td><td>板上 AM ISP（MIRA220 LUT）或 rkaiq（SC233）。Gadget 只发送 JPEG。</td></tr>
+      </table>
+      <p>主机用 Windows 相机或任意 UVC 客户端。电脑挂着磁盘时，不要在应用里打开同一张卡。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>卡上目录</h2>
+      <p>一颗相机、一颗 IMU。不是 Ego 双目的 <code>My Recordings/&lt;serial&gt;_&lt;boot&gt;_&lt;index&gt;/episode/</code>。</p>
+      <pre>&lt;card&gt;/camevision/sessions/20261023T160102Z/
+  session.json
+  imu0.csv
+  cam0/video.mp4
+  COMPLETE</pre>
+      <table>
+        <tr><th>文件</th><th>内容</th></tr>
+        <tr><td><code>cam0/video.mp4</code></td><td>全分辨率 H.264。SC233 1920×1200。MIRA220 1400×1600</td></tr>
+        <tr><td><code>imu0.csv</code></td><td><code>t_unix_ns,t_mono_ns,ax,ay,az,gx,gy,gz</code> — 加速度 m/s²，陀螺 deg/s</td></tr>
+        <tr><td><code>session.json</code></td><td>格式 <code>camevision-session-1</code>，产品 <code>CV-EGO01-SS</code></td></tr>
+      </table>
+      <p>应用里的定位预览是蓝牙上约四分之一分辨率的 JPEG，不写入卡。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>现场页 · 8081</h2>
       <table>
         <tr><th>路径</th><th>内容</th></tr>
         <tr><td><code>/</code></td><td>现场页 + IMU</td></tr>
         <tr><td><code>/ov0</code></td><td>MJPEG</td></tr>
+        <tr><td><code>/snap0</code></td><td>一张 JPEG</td></tr>
         <tr><td><code>/stat</code></td><td>帧率 JSON</td></tr>
         <tr><td><code>/imu</code></td><td>转发 :8083</td></tr>
       </table>
       <pre>python tools/cv_single_page.py</pre>
     </div>
   </section>
-  <footer class="foot"><div class="wrap foot-row"><div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div><div><a href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">商城</a></div></div></footer>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <div>© Camemake · CameVision Ego Single Sensor · CV-EGO01-SS</div>
+      <div><a href="https://www.camemake.eu/zh-CN/shop/camevision-ego-single-sensor-4547">商城</a></div>
+    </div>
+  </footer>
 </body>
 </html>

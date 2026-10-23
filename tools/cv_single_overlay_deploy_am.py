@@ -2,7 +2,7 @@
 """Install the CameVision Mono / MIRA220 overlay over ADB.
 
 One camera, one IMU. Does not flash partitions. Does not touch Ego.
-USB stays ADB.
+Deploy stays on ADB. Reboot binds Camemake UVC after Wi-Fi is up.
 """
 from __future__ import annotations
 
@@ -132,18 +132,22 @@ def deploy(s: str, pylib: bool = True) -> None:
         (tools / "camevision-uvc-start.sh", "/userdata/camevision-uvc-start.sh"),
         (tools / "camevision-uvc-stop.sh", "/userdata/camevision-uvc-stop.sh"),
         (tools / "camevision-uvc-bridge.py", "/userdata/camevision-uvc-bridge.py"),
+        (tools / "_lock_uvc_safe.sh", "/userdata/_lock_uvc_safe.sh"),
         (tools / "libsingle_color.so", "/userdata/libsingle_color.so"),
         (tools / "single_imu_hud.py", "/userdata/single_imu_hud.py"),
         (tools / "camevision_agent.py", "/userdata/camevision_agent.py"),
         (tools / "camevision_ble.py", "/userdata/camevision_ble.py"),
+        (tools / "camevision_dbus.py", "/userdata/camevision_dbus.py"),
         (tools / "camevision-single.sh", "/userdata/camevision-single.sh"),
         (tools / "S99camevision-single", "/userdata/S99camevision-single"),
         (tools / "S10mira220", "/userdata/S10mira220"),
         (tools / "S11hwclock", "/userdata/S11hwclock"),
         (tools / "camemake-logo.png", "/userdata/camemake-logo.png"),
         (first_file(tools / "camevision-wifi.sh", OV / "camevision-wifi.sh", CUR / "overlay" / "camevision-wifi.sh"), "/userdata/camevision-wifi.sh"),
+        (first_file(tools / "camevision-ble.sh", OV / "camevision-ble.sh", CUR / "overlay" / "camevision-ble.sh"), "/userdata/camevision-ble.sh"),
         (first_file(tools / "wpa_camevision.conf", OV / "wpa_camevision.conf", CUR / "overlay" / "wpa_camevision.conf"), "/userdata/wpa_camevision.conf"),
         (first_file(tools / "camevision-hw.sh", OV / "camevision-hw.sh", CUR / "overlay" / "camevision-hw.sh"), "/userdata/camevision-hw.sh"),
+        (first_file(tools / "camevision-sd.sh", OV / "camevision-sd.sh", CUR / "overlay" / "camevision-sd.sh"), "/userdata/camevision-sd.sh"),
         (first_file(tools / "camevision-led.sh", OV / "camevision-led.sh", CUR / "overlay" / "camevision-led.sh"), "/userdata/camevision-led.sh"),
         (first_file(OV / "S50usbdevice", CUR / "overlay" / "S50usbdevice"), "/userdata/S50usbdevice"),
         (first_file(OV / "S99camevision", tools / "S99camevision-single"), "/userdata/S99camevision"),
@@ -189,16 +193,20 @@ def deploy(s: str, pylib: bool = True) -> None:
         "sed -i 's/\\r$//' /userdata/single_live.py /userdata/single_imu_hud.py "
         "/userdata/camevision_agent.py /userdata/camevision_ble.py "
         "/userdata/camevision-single.sh /userdata/S10mira220 "
-        "/userdata/camevision-wifi.sh /userdata/camevision-hw.sh "
+        "/userdata/camevision-wifi.sh /userdata/camevision-ble.sh /userdata/camevision-hw.sh "
+        "/userdata/camevision-sd.sh "
         "/userdata/S99camevision-single /userdata/S11hwclock /userdata/S99camevision "
         "/userdata/camevision-uvc-gadget.sh /userdata/camevision-uvc-start.sh "
-        "/userdata/camevision-uvc-stop.sh /userdata/camevision-uvc-bridge.py; "
+        "/userdata/camevision-uvc-stop.sh /userdata/camevision-uvc-bridge.py "
+        "/userdata/_lock_uvc_safe.sh; "
         "chmod 755 /userdata/camevision-single.sh /userdata/S10mira220 "
-        "/userdata/camevision-wifi.sh /userdata/camevision-hw.sh "
+        "/userdata/camevision-wifi.sh /userdata/camevision-ble.sh /userdata/camevision-hw.sh "
+        "/userdata/camevision-sd.sh "
         "/userdata/S99camevision-single /userdata/S11hwclock /userdata/S99camevision "
         "/userdata/camevision-uvc-gadget.sh /userdata/camevision-uvc-start.sh "
-        "/userdata/camevision-uvc-stop.sh /userdata/camevision-uvc-bridge.py; "
-        "rm -f /userdata/uvc-webcam.on /userdata/ego_stereo.py "
+        "/userdata/camevision-uvc-stop.sh /userdata/camevision-uvc-bridge.py "
+        "/userdata/_lock_uvc_safe.sh; "
+        "rm -f /userdata/uvc-webcam.on /userdata/ble.hold /userdata/ego_stereo.py "
         "/userdata/ego_imu_hud.py /userdata/ego_cam_sync.py "
         "/userdata/camevision-stereo.sh /userdata/libego_stereo.so; "
         "mount -o remount,rw / 2>/dev/null; "

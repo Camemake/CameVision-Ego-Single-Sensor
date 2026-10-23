@@ -152,6 +152,17 @@
 		vin-supply = <&vcc3v3_sys>;
 	};
 
+	/* microSD VDD. 3.3 V only — do not hang this off vcc_1v8. */
+	vcc_sd: vcc-sd {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_sd";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+		regulator-boot-on;
+		vin-supply = <&vcc3v3_sys>;
+	};
+
 	/*
 	 * D1 is a common-anode RGB LED, so every channel is active low.
 	 *   STATUS_LED_R  GPIO0_A6  pad 1AA6
@@ -626,11 +637,24 @@
 	vqmmc-supply = <&vcc_1v8>;
 };
 
-/* No microSD socket on this board. GPIO0_A5 doubles as SDMMC0_DET and is
- * used for the green LED, so sdmmc0 must stay off.
+/*
+ * microSD on sdmmc0. Init and I/O stay at 3.3 V (no sd-uhs, no vcc_1v8).
+ * GPIO0_A5 is the green LED, not CD. GPIO0_B2 is CAM0 DVDD, not PWREN.
  */
 &sdmmc0 {
-	status = "disabled";
+	status = "okay";
+	no-sdio;
+	no-mmc;
+	bus-width = <1>;
+	disable-wp;
+	broken-cd;
+	no-1-8-v;
+	max-frequency = <12500000>;
+	rockchip,default-sample-phase = <0>;
+	vmmc-supply = <&vcc_sd>;
+	vqmmc-supply = <&vcc3v3_sys>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc0_clk_pins &sdmmc0_cmd_pins &sdmmc0_bus4_pins>;
 };
 
 &sdmmc1 {

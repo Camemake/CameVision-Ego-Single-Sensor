@@ -15,7 +15,7 @@ sealed class InfoEvent {
     data class Status(val status: CameraStatus) : InfoEvent()
     data class Sessions(val items: List<SessionRow>) : InfoEvent()
     data class Wifi(val items: List<WifiNet>) : InfoEvent()
-    data class Ack(val cmd: String, val ok: Boolean, val error: String) : InfoEvent()
+    data class Ack(val cmd: String, val ok: Boolean, val error: String, val session: String = "") : InfoEvent()
     data class Hello(val name: String) : InfoEvent()
 }
 
@@ -29,8 +29,13 @@ fun parseInfo(text: String): InfoEvent? {
         "status" -> InfoEvent.Status(parseStatus(obj))
         "sessions" -> InfoEvent.Sessions(parseSessionArray(obj.optJSONArray("items")))
         "wifi" -> InfoEvent.Wifi(parseWifi(obj.optJSONArray("items")))
-        "ack" -> InfoEvent.Ack(obj.optString("cmd"), obj.optBoolean("ok"), obj.optString("error"))
-        "hello" -> InfoEvent.Hello(obj.optString("name").ifBlank { "CameVision Ego Single" })
+        "ack" -> InfoEvent.Ack(
+            obj.optString("cmd"),
+            obj.optBoolean("ok"),
+            obj.optString("error"),
+            obj.optString("session"),
+        )
+        "hello" -> InfoEvent.Hello(obj.optString("name").ifBlank { obj.optString("title").ifBlank { "CameVision" } })
         else -> null
     }
 }
@@ -55,6 +60,18 @@ fun parseStatus(obj: JSONObject): CameraStatus = CameraStatus(
     sent = obj.optInt("sent"),
     preview = obj.optBoolean("preview"),
     error = obj.optString("error"),
+    product = obj.optString("product"),
+    sku = obj.optString("sku").ifBlank { obj.optString("product") },
+    profile = obj.optString("profile").ifBlank { "single" },
+    title = obj.optString("title"),
+    fw = obj.optString("fw"),
+    protocol = obj.optInt("protocol"),
+    sensors = obj.optInt("sensors", 1).coerceAtLeast(1),
+    sensor = obj.optString("sensor"),
+    imuCount = obj.optInt("imu", 1).coerceAtLeast(0),
+    nativeW = obj.optInt("native_w"),
+    nativeH = obj.optInt("native_h"),
+    boardId = obj.optString("board"),
 )
 
 fun parseSessions(text: String): List<SessionRow> {

@@ -13,9 +13,11 @@ video.mp4 is H.264 at the sensor's full frame (1920x1200 on SC233HGS,
 t_unix_ns,t_mono_ns,ax,ay,az,gx,gy,gz with accel in m/s^2 and gyro in deg/s.
 
 Bluetooth and HTTP speak the same JSON commands. The phone uses Bluetooth
-to start, stop, preview, and clear. Online mode uploads from the camera
-Wi-Fi to the server saved in /userdata/camevision-app.json. Standalone mode
-leaves the files on the card so the phone can copy them and upload.
+to start, stop, preview, and clear. Preview is 10 seconds at quarter
+resolution over BLE. Online mode uploads from the camera Wi-Fi to the
+server saved in /userdata/camevision-app.json. Standalone mode leaves the
+files on the card so the phone can copy them and upload. USB Camemake UVC
+is a separate path and is not controlled by this agent.
 """
 from __future__ import print_function
 
@@ -42,6 +44,9 @@ except ImportError:
 
 PRODUCT = "CV-EGO01-SS"
 PROFILE = "single"
+FW_VERSION = "1.1.0"
+PROTOCOL = 1
+BOARD_PATH = os.environ.get("CAMEVISION_BOARD", "/userdata/camevision-board.json")
 FORMAT = "camevision-session-1"
 HTTP_PORT = 8090
 LIVE_JPG = os.environ.get("CAMEVISION_LIVE", "/tmp/camevision-live.jpg")
@@ -86,6 +91,68 @@ def session_id_now():
     return time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
 
 
+def default_board():
+    stereo = PROFILE in ("stereo", "ego", "dual")
+    return {
+        "product": PRODUCT,
+        "sku": PRODUCT,
+        "profile": "stereo" if stereo else "single",
+        "title": "CameVision Ego" if stereo else "CameVision Ego Single",
+        "fw": FW_VERSION,
+        "protocol": PROTOCOL,
+        "sensors": 2 if stereo else 1,
+        "sensor": "MIRA220",
+        "imu": 1,
+        "native_w": 1400,
+        "native_h": 1600,
+        "board": "CV-EGO01-CAM",
+    }
+
+
+def board_info():
+    info = default_board()
+    try:
+        with open(BOARD_PATH, "r") as fh:
+            got = json.load(fh)
+        if isinstance(got, dict):
+            info.update(got)
+    except (OSError, ValueError):
+        pass
+    try:
+        info["sensors"] = int(info.get("sensors") or 1)
+        info["imu"] = int(info.get("imu") or 1)
+        info["native_w"] = int(info.get("native_w") or 0)
+        info["native_h"] = int(info.get("native_h") or 0)
+        info["protocol"] = int(info.get("protocol") or PROTOCOL)
+    except (TypeError, ValueError):
+        pass
+    if str(info.get("profile") or "") in ("stereo", "ego", "dual") or int(info.get("sensors") or 1) >= 2:
+        info["profile"] = "stereo"
+        info["sensors"] = max(2, int(info.get("sensors") or 2))
+        if not info.get("title") or info.get("title") == "CameVision Ego Single":
+            info["title"] = "CameVision Ego"
+    info["fw"] = str(info.get("fw") or FW_VERSION)
+    info["sku"] = str(info.get("sku") or info.get("product") or PRODUCT)
+    return info
+
+
+def ble_display_name():
+    try:
+        from camevision_ble import display_name
+
+        return display_name()
+    except Exception:
+        return "CameVision Ego Single"
+
+
+def boot_count():
+    try:
+        with open("/userdata/boot_count", "r") as fh:
+            return int((fh.read() or "0").strip() or "0")
+    except (OSError, ValueError):
+        return 0
+
+
 def load_cfg():
     cfg = {"server": "", "token": "", "warn": 85, "mode": "standalone"}
     try:
@@ -115,10 +182,70 @@ def save_cfg(cfg):
     os.replace(tmp, CFG_PATH)
 
 
+def _mount_line(mnt):
+    try:
+        mounts = open("/proc/mounts", "r")
+    except OSError:
+        return None
+    with mounts:
+        for line in mounts:
+            parts = line.split()
+            if len(parts) >= 3 and parts[1] == mnt:
+                return parts
+    return None
+
+
+def _msc_holds_card():
+    path = "/sys/kernel/config/usb_gadget/rockchip/functions/mass_storage.0/lun.0/file"
+    try:
+        return bool(open(path, "r").read().strip())
+    except OSError:
+        return False
+
+
+def _try_mount_sd():
+    mnt = "/mnt/sdcard"
+    if _mount_line(mnt):
+        return mnt
+    if _msc_holds_card():
+        return None
+    candidates = []
+    sysblock = "/sys/block"
+    if os.path.isdir(sysblock):
+        for name in sorted(os.listdir(sysblock)):
+            if not name.startswith("mmcblk") or name.startswith("mmcblk0"):
+                continue
+            if "boot" in name or "rpmb" in name:
+                continue
+            candidates.append(name)
+    for name in candidates:
+        part = None
+        for suffix in ("p1", "1"):
+            path = "/dev/%s%s" % (name, suffix)
+            if os.path.exists(path):
+                part = path
+                break
+        src = part or ("/dev/" + name)
+        if not os.path.exists(src):
+            continue
+        try:
+            os.makedirs(mnt, exist_ok=True)
+        except OSError:
+            pass
+        os.system("mount -t vfat -o utf8,flush %s %s >/dev/null 2>&1" % (src, mnt))
+        if _mount_line(mnt):
+            return mnt
+        os.system("mount %s %s >/dev/null 2>&1" % (src, mnt))
+        if _mount_line(mnt):
+            return mnt
+    return None
+
+
 def find_sd():
     forced = os.environ.get("CAMEVISION_SD")
     if forced:
         return forced
+    _try_mount_sd()
     best = None
     try:
         mounts = open("/proc/mounts", "r")
@@ -148,10 +275,55 @@ def find_sd():
                     best = mnt
     if best:
         return best
-    for cand in ("/mnt/sdcard", "/mnt/extsd", "/media/sdcard", "/mnt/mmc"):
-        if os.path.isdir(cand):
-            return cand
     return None
+
+
+def _mount_dev(path):
+    try:
+        mounts = open("/proc/mounts", "r")
+    except OSError:
+        return None
+    best = None
+    with mounts:
+        for line in mounts:
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+            dev, mnt = parts[0], parts[1]
+            if mnt == path:
+                return dev
+            if path.startswith(mnt.rstrip("/") + "/") and len(mnt) >= len(best or ""):
+                best = dev
+    return best
+
+
+def _fat_total_bytes(dev):
+    if not dev or not dev.startswith("/dev/"):
+        return None
+    boot = b""
+    try:
+        boot = subprocess.check_output(
+            ["dd", "if=" + dev, "bs=512", "count=1"],
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError):
+        try:
+            with open(dev, "rb") as fh:
+                boot = fh.read(512)
+        except OSError:
+            return None
+    if len(boot) < 512 or boot[510] != 0x55 or boot[511] != 0xAA:
+        return None
+    bps = boot[11] | (boot[12] << 8)
+    if bps not in (512, 1024, 2048, 4096):
+        return None
+    tot16 = boot[19] | (boot[20] << 8)
+    tot32 = boot[32] | (boot[33] << 8) | (boot[34] << 16) | (boot[35] << 24)
+    sectors = tot32 if tot16 == 0 else tot16
+    if sectors < 16:
+        return None
+    return int(sectors) * int(bps)
 
 
 def disk_of(path):
@@ -168,6 +340,10 @@ def disk_of(path):
     used = total - (int(st.f_bfree) * int(st.f_frsize))
     if used < 0:
         used = 0
+    fat = _fat_total_bytes(_mount_dev(path))
+    if fat and fat > 0:
+        total = fat
+        free = max(0, total - used)
     return {"total": total, "used": used, "free": free}
 
 
@@ -189,7 +365,7 @@ def read_aim_jpeg():
             data = fh.read()
     except OSError:
         return None
-    if len(data) < 4 or len(data) > 16000:
+    if len(data) < 4 or len(data) > 96000:
         return None
     if data[0] != 0xFF or data[1] != 0xD8 or data[-2] != 0xFF or data[-1] != 0xD9:
         return None
@@ -257,6 +433,49 @@ def read_live_jpeg():
     if data[-2] != 0xFF or data[-1] != 0xD9:
         return None
     return data
+
+
+def make_ble_jpeg(src):
+    if not src:
+        return None
+    width, height = jpeg_size(src)
+    if width >= 640 and height >= 720 and len(src) <= 70000:
+        return src
+    src_path = "/tmp/camevision-ble-src.jpg"
+    dst_path = "/tmp/camevision-ble.jpg"
+    try:
+        with open(src_path, "wb") as fh:
+            fh.write(src)
+        binary = "/oem/usr/bin/ffmpeg"
+        if not os.path.isfile(binary):
+            binary = "ffmpeg"
+        subprocess.check_call(
+            [
+                binary,
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                src_path,
+                "-vf",
+                "scale=700:800",
+                "-q:v",
+                "8",
+                dst_path,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        )
+        with open(dst_path, "rb") as fh:
+            out = fh.read()
+        if len(out) > 4 and out[0] == 0xFF and out[1] == 0xD8:
+            return out
+    except (OSError, subprocess.SubprocessError):
+        pass
+    if width >= 640 and len(src) <= 70000:
+        return src
+    return None
 
 
 def wpa_escape(text):
@@ -636,6 +855,9 @@ class Recorder(object):
             "mode": self.mode,
             "started": self.started,
             "stopped": self.stopped or None,
+            "boot_count": boot_count(),
+            "time_base": "CLOCK_MONOTONIC_ns",
+            "session_complete": bool(final and not self.recording),
             "camera": {
                 "id": "cam0",
                 "width": self.width,
@@ -647,6 +869,8 @@ class Recorder(object):
             },
             "imu": {
                 "id": "imu0",
+                "file": "imu0.csv",
+                "columns": "t_unix_ns,t_mono_ns,ax,ay,az,gx,gy,gz",
                 "accel_unit": "m/s^2",
                 "gyro_unit": "deg/s",
             },
@@ -660,9 +884,13 @@ class Recorder(object):
             fh.write("\n")
         os.replace(tmp, os.path.join(path, "session.json"))
         self._meta_t = time.monotonic()
-        if final:
+        if final and not self.recording:
             done = os.path.join(path, "COMPLETE")
-            if not self.recording:
+            try:
+                with open(done, "w") as fh:
+                    fh.write(self.stopped or iso_now())
+                    fh.write("\n")
+            except OSError:
                 pass
 
 
@@ -689,7 +917,7 @@ def snapshot(rec):
     warn_at = int(cfg.get("warn") or 85)
     card = rec.card_root() is not None and os.path.isdir(rec.card_root() or "")
     sd_warn = bool(card and total > 0 and used * 100 >= warn_at * total)
-    return {
+    out = {
         "t": "status",
         "recording": recording,
         "mode": mode,
@@ -706,9 +934,9 @@ def snapshot(rec):
         "pending": pending,
         "sent": sent,
         "error": error,
-        "product": PRODUCT,
-        "profile": PROFILE,
     }
+    out.update(board_info())
+    return out
 
 
 class Agent(object):
@@ -725,7 +953,9 @@ class Agent(object):
         self._completed = set()
         self._imu_post = {}
         self._live_started = False
+        self.ble_mtu = 185
         self.ff = None
+        self._jpeg_rec = False
         self._aim_on = False
 
     def emit(self, obj):
@@ -756,7 +986,14 @@ class Agent(object):
             result = {"ok": False, "error": "bad_cmd"}
             name = ""
         else:
+            try:
+                got = int(cmd.get("mtu") or 0)
+            except (TypeError, ValueError):
+                got = 0
+            if got >= 23:
+                self.ble_mtu = max(23, min(got, 517))
             name = str(cmd.get("cmd") or "")
+            log("cmd %s" % name)
             result = self._dispatch(name, cmd)
         ack = {"t": "ack", "cmd": name, "ok": bool(result.get("ok")), "error": result.get("error") or ""}
         if result.get("session"):
@@ -769,14 +1006,15 @@ class Agent(object):
 
     def _dispatch(self, name, cmd):
         if name in ("hello", "ping"):
-            return {
+            hello = {
                 "ok": True,
                 "error": "",
                 "t": "hello",
-                "product": PRODUCT,
-                "name": "CameVision Ego Single",
-                "protocol": 1,
+                "name": ble_display_name(),
             }
+            hello.update(board_info())
+            self.emit(hello)
+            return hello
         if name == "start":
             return self.rec.start(cmd.get("mode"))
         if name == "stop":
@@ -785,15 +1023,18 @@ class Agent(object):
         if name == "mode":
             return self._set_mode(cmd.get("mode"))
         if name == "preview":
-            try:
-                seconds = int(cmd.get("seconds") or 0)
-            except (TypeError, ValueError):
-                seconds = 0
+            if "seconds" not in cmd:
+                seconds = 10
+            else:
+                try:
+                    seconds = int(cmd.get("seconds") or 0)
+                except (TypeError, ValueError):
+                    seconds = 0
             if seconds <= 0:
                 self.preview_until = 0
                 self.set_aim(False)
             else:
-                self.preview_until = time.time() + min(seconds, 4)
+                self.preview_until = time.time() + max(1, min(seconds, 3600))
                 self.set_aim(True)
             return {"ok": True, "error": ""}
         if name == "clear":
@@ -805,8 +1046,10 @@ class Agent(object):
         if name == "list":
             return {"ok": True, "error": ""}
         if name == "wifi":
-            threading.Thread(target=self._emit_wifi, daemon=True).start()
-            return {"ok": True, "error": ""}
+            items = scan_wifi()
+            payload = {"ok": True, "error": "", "t": "wifi", "items": items}
+            self.emit({"t": "wifi", "items": items})
+            return payload
         if name == "config":
             return self._config(cmd)
         return {"ok": False, "error": "bad_cmd"}
@@ -901,10 +1144,16 @@ class Agent(object):
                 self.emit(self.status())
                 continue
             self.ensure_live()
-            if self.ff is None:
+            if self.ff is None and not self._jpeg_rec:
                 self.start_video()
-            else:
+                if self.ff is None and self.rec.recording:
+                    self._jpeg_rec = True
+                    self.rec.error = ""
+                    log("record jpeg fallback")
+            if self.ff is not None:
                 self.poll_video()
+            elif self._jpeg_rec:
+                self._save_live_jpeg()
             time.sleep(0.3)
 
     def start_video(self):
@@ -932,7 +1181,6 @@ class Agent(object):
         proc = self.launch_ffmpeg(path, width, height, fps)
         if proc is None:
             self.clear_record_flag()
-            self.rec.error = "no_image"
             return
         self.ff = proc
         self.rec.note_video(width, height, fps, 0)
@@ -973,9 +1221,11 @@ class Agent(object):
             out = ""
         if "h264_rkmpp" in out:
             return ["-c:v", "h264_rkmpp", "-b:v", VIDEO_BPS]
-        if "h264_v4l2m2m" in out:
-            return ["-c:v", "h264_v4l2m2m", "-b:v", VIDEO_BPS]
-        return ["-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-crf", "18"]
+        if "libx264" in out:
+            return ["-c:v", "libx264", "-preset", "ultrafast", "-tune", "zerolatency", "-crf", "18"]
+        if "mpeg4" in out:
+            return ["-c:v", "mpeg4", "-q:v", "5"]
+        return ["-strict", "unofficial", "-c:v", "mjpeg", "-q:v", "5"]
 
     def launch_ffmpeg(self, path, width, height, fps):
         binary = self.ffmpeg_bin()
@@ -1009,7 +1259,9 @@ class Agent(object):
             self.ff = None
             self.clear_record_flag()
             if self.rec.recording:
-                self.rec.error = "no_image"
+                self._jpeg_rec = True
+                self.rec.error = ""
+                log("record jpeg fallback")
             return
         path = getattr(self.rec, "video_path", "") or ""
         try:
@@ -1018,8 +1270,29 @@ class Agent(object):
             size = 0
         self.rec.note_video(self.rec.width, self.rec.height, self.rec.fps, size)
 
+    def _save_live_jpeg(self):
+        jpg = read_live_jpeg()
+        if not jpg:
+            return
+        path = getattr(self.rec, "video_path", "") or ""
+        folder = os.path.dirname(path)
+        if not folder:
+            return
+        n = int(self.rec.frames) + 1
+        dest = os.path.join(folder, "%06d.jpg" % n)
+        try:
+            with open(dest, "wb") as fh:
+                fh.write(jpg)
+        except OSError:
+            self.rec.error = "no_card"
+            return
+        self.rec.frames = n
+        self.rec.error = ""
+        self.rec.note_video(self.rec.width or 1400, self.rec.height or 1600, 10, 0)
+
     def stop_video(self):
         self.clear_record_flag()
+        self._jpeg_rec = False
         proc = self.ff
         self.ff = None
         if proc is None:
@@ -1082,6 +1355,9 @@ class Agent(object):
             self.set_aim(True)
             self.ensure_live()
             jpg = read_aim_jpeg()
+            if jpg is None:
+                jpg = read_live_jpeg()
+            jpg = make_ble_jpeg(jpg)
             fn = self.on_preview
             if jpg and jpg != last and fn:
                 last = jpg
@@ -1299,10 +1575,20 @@ class Agent(object):
         except Exception as exc:
             log("BLE import %s" % exc)
             return
-        try:
-            camevision_ble.serve(self)
-        except Exception as exc:
-            log("BLE off %s" % exc)
+        while not self.stop_ev.is_set():
+            if not os.path.isdir("/sys/class/bluetooth"):
+                time.sleep(2)
+                continue
+            if not any(name.startswith("hci") for name in os.listdir("/sys/class/bluetooth")):
+                time.sleep(2)
+                continue
+            try:
+                camevision_ble.serve(self)
+            except Exception as exc:
+                log("BLE off %s" % exc)
+            if self.stop_ev.is_set():
+                break
+            time.sleep(3)
 
     def shutdown(self):
         self.stop_ev.set()
@@ -1390,8 +1676,14 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/v1/status":
             self._json(200, agent.status())
             return
+        if path == "/v1/about":
+            self._json(200, board_info())
+            return
         if path == "/v1/sessions":
             self._json(200, {"items": agent.rec.list_sessions()})
+            return
+        if path == "/v1/wifi":
+            self._json(200, {"t": "wifi", "items": scan_wifi()})
             return
         if path == "/v1/preview.jpg":
             jpg = read_live_jpeg()
