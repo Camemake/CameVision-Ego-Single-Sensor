@@ -4,7 +4,7 @@
 #
 # Gate: SDIO function 1FFE:6621 must already be on mmc2 (DT pwrseq).
 # Modules: /userdata/swt6621-rt52 or /ko (same names as factory /ko).
-# Firmware: SWT6621S_NV_SDIO.bin at firmware_class path (ALONE renamed).
+# Firmware: SWT6621S_NV_SDIO.bin at firmware_class path (SHARE for combo antenna).
 
 KO=/userdata/swt6621-rt52
 [ -d "$KO" ] || KO=/ko
@@ -24,7 +24,9 @@ start() {
 	echo "M1PORT: initializing VS6621 WiFi"
 
 	if [ -d "$FW_SRC" ]; then
-		if [ ! -f "$FW_SRC/SWT6621S_NV_SDIO.bin" ] && [ -f "$FW_SRC/SWT6621S_NV_SDIO_ALONE.bin" ]; then
+		if [ -f "$FW_SRC/SWT6621S_NV_SDIO_SHARE.bin" ]; then
+			cp -f "$FW_SRC/SWT6621S_NV_SDIO_SHARE.bin" "$FW_SRC/SWT6621S_NV_SDIO.bin"
+		elif [ ! -f "$FW_SRC/SWT6621S_NV_SDIO.bin" ] && [ -f "$FW_SRC/SWT6621S_NV_SDIO_ALONE.bin" ]; then
 			cp -f "$FW_SRC/SWT6621S_NV_SDIO_ALONE.bin" "$FW_SRC/SWT6621S_NV_SDIO.bin"
 		fi
 		if [ -e /sys/module/firmware_class/parameters/path ]; then
@@ -45,6 +47,12 @@ start() {
 	insmod $KO/swt6621s_wifi.ko 2>/dev/null
 	sleep 0.2
 	insmod $KO/skwbt.ko 2>/dev/null
+	sleep 0.5
+	BT_NAME="CameVision Ego Single Sensor"
+	hciconfig hci0 up 2>/dev/null || true
+	hciconfig hci0 name "$BT_NAME" 2>/dev/null || true
+	hciconfig hci0 piscan 2>/dev/null || true
+	hciconfig hci0 leadv 3 2>/dev/null || hciconfig hci0 leadv 0 2>/dev/null || true
 
 	mkdir -p /var/run/wpa_supplicant
 	WPA_CONF=/tmp/m1port-wpa.conf

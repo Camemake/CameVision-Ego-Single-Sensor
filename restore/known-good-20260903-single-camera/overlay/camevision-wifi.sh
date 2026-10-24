@@ -70,11 +70,14 @@ if [ -e /sys/module/firmware_class/parameters/path ]; then
 	log "firmware path=$FWSRC"
 fi
 if [ -d "$FWSRC" ]; then
-	if [ ! -f "$FWSRC/SWT6621S_NV_SDIO.bin" ] && [ -f "$FWSRC/SWT6621S_NV_SDIO_ALONE.bin" ]; then
+	# VS6621 is Wi-Fi + BLE on one antenna. SHARE NV enables coexistence.
+	if [ -f "$FWSRC/SWT6621S_NV_SDIO_SHARE.bin" ]; then
+		cp -f "$FWSRC/SWT6621S_NV_SDIO_SHARE.bin" "$FWSRC/SWT6621S_NV_SDIO.bin"
+		cp -f "$FWSRC/SWT6621S_NV_SDIO_SHARE.bin" "$FWSRC/SEEKWAVE_NV_SWT6621S.bin"
+		log "firmware NV=SHARE (wifi+ble one antenna)"
+	elif [ ! -f "$FWSRC/SWT6621S_NV_SDIO.bin" ] && [ -f "$FWSRC/SWT6621S_NV_SDIO_ALONE.bin" ]; then
 		cp -f "$FWSRC/SWT6621S_NV_SDIO_ALONE.bin" "$FWSRC/SWT6621S_NV_SDIO.bin"
-	fi
-	if [ ! -f "$FWSRC/SEEKWAVE_NV_SWT6621S.bin" ] && [ -f "$FWSRC/SWT6621S_NV_SDIO_ALONE.bin" ]; then
-		cp -f "$FWSRC/SWT6621S_NV_SDIO_ALONE.bin" "$FWSRC/SEEKWAVE_NV_SWT6621S.bin"
+		log "firmware NV=ALONE (wifi only fallback)"
 	fi
 	if mkdir -p "$FWDIR" 2>/dev/null; then
 		cp -f "$FWSRC"/* "$FWDIR"/ 2>/dev/null || true
@@ -143,14 +146,25 @@ fi
 ip -4 addr show $WLAN | tee -a "$LOG"
 log "WIFI_READY"
 
+BT_NAME="CameVision Ego Single Sensor"
 if ins skwbt; then
 	sleep 1
 	hciconfig hci0 up 2>/dev/null || true
+	hciconfig hci0 name "$BT_NAME" 2>/dev/null || true
 	hciconfig hci0 piscan 2>/dev/null || true
+	hciconfig hci0 leadv 3 2>/dev/null || hciconfig hci0 leadv 0 2>/dev/null || true
+	if command -v btmgmt >/dev/null 2>&1; then
+		btmgmt --index 0 name "$BT_NAME" >/dev/null 2>&1 || true
+		btmgmt --index 0 connectable on >/dev/null 2>&1 || true
+		btmgmt --index 0 discov on >/dev/null 2>&1 || true
+		btmgmt --index 0 advertising on >/dev/null 2>&1 || true
+	fi
 	if hciconfig hci0 2>/dev/null | grep -q 'UP RUNNING'; then
-		log "BLE_READY hci0"
+		log "BLE_READY hci0 name=$BT_NAME"
+		hciconfig hci0 | tee -a "$LOG"
 	else
 		log "BLE_WARN hci0 not UP"
+		hciconfig -a >>"$LOG" 2>&1 || true
 	fi
 else
 	log "BLE_SKIP skwbt not loaded"
