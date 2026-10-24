@@ -1,28 +1,39 @@
 #!/usr/bin/env python3
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from cv_telnet import run
+"""Restart the Camemake JPEG pump over ADB and dump its log."""
+from __future__ import annotations
 
-CMD = r"""
-echo VIDEO
-for n in /sys/class/video4linux/video*; do
-  echo $(basename $n) $(cat $n/name)
-done
-echo PUMP
-killall ffmpeg 2>/dev/null
-UVCDEV=
-for n in /sys/class/video4linux/video*; do
-  name=$(cat $n/name)
-  echo "$name" | grep -qiE 'gadget|uvc' || continue
-  UVCDEV=/dev/$(basename $n)
-done
-echo DST=$UVCDEV
-if [ -n "$UVCDEV" ]; then
-  ffmpeg -hide_banner -loglevel warning -re -f lavfi -i testsrc2=size=640x360:rate=15 -c:v mjpeg -q:v 7 -pix_fmt yuvj420p -f v4l2 $UVCDEV >/tmp/camevision-uvc.log 2>&1 &
-  sleep 2
-  ps | grep ffmpeg | grep -v grep
-  cat /tmp/camevision-uvc.log
-fi
-"""
-print(run(CMD, wait=10))
+import subprocess
+import time
+
+SERIAL = "CV-EGO01-CAM"
+
+
+def sh(cmd: str, timeout: int = 20) -> str:
+    r = subprocess.run(
+        ["adb", "-s", SERIAL, "shell", cmd],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    return (r.stdout or "") + (r.stderr or "")
+
+
+def main() -> int:
+    print("=== log before ===")
+    print(sh("cat /userdata/cv-uvc-bridge.log; echo ---; ls /dev/video53; cat /sys/class/video4linux/video53/name"))
+    print("=== restart ===")
+    print(
+        sh(
+            "for p in $(ps | grep camevision-uvc-bridge | grep -v grep | awk '{print $1}'); do kill -9 $p; done; "
+            ": > /userdata/cv-uvc-bridge.log; "
+            "setsid /usr/bin/python3 /userdata/camevision-uvc-bridge.py </dev/null >>/userdata/cv-uvc-bridge.log 2>&1 & "
+            "echo STARTED $!"
+        )
+    )
+    time.sleep(1.2)
+    print(sh("ps | grep camevision-uvc-bridge | grep -v grep; echo ---LOG---; cat /userdata/cv-uvc-bridge.log"))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

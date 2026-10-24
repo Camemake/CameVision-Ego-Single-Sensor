@@ -269,12 +269,57 @@ def load_uvc_ctl() -> dict:
     return shared.get("_uvc_ctl") or {}
 
 
-def set_live_30fps() -> None:
-    """Keep Ego AM window + the UVC / live exposure on the sensor.
+# MIRA220 CLK_IN is 38.4 MHz (S10mira220 / HARDWARE.md). EXP_TIME and
+# VBLANK are row counts. ROW_LENGTH 0x102B is CLK_IN cycles per row.
+# Context B copies: EXP 0x1115, VBLANK 0x1103, ROW 0x1113.
+MIRA_CLK_HZ = 38400000.0
+MIRA_ROW_FALLBACK = 304
+MIRA_EXP_A = 0x100C
+MIRA_EXP_B = 0x1115
+MIRA_VBLANK_A = 0x1012
+MIRA_VBLANK_B = 0x1103
+MIRA_ROW_A = 0x102B
 
-    The mira220 driver rewrites VSTART=64 and EXP=1000 on stream-on.
-    VSTART≠0 slides 64 dummy rows into the frame; after 90° CCW that is
-    a bad right edge. Re-apply like Ego (after STREAMON and every few s).
+
+def _mira_row_length() -> int:
+    cached = shared.get("_mira_row")
+    if isinstance(cached, int) and 256 <= cached <= 4096:
+        return cached
+    try:
+        row = _i2c_rd16(3, MIRA_ROW_A)
+    except Exception:
+        row = MIRA_ROW_FALLBACK
+    if not (256 <= row <= 4096):
+        row = MIRA_ROW_FALLBACK
+    shared["_mira_row"] = row
+    return row
+
+
+def _uvc_powerline(ctl: dict) -> int:
+    if "powerline" not in ctl:
+        return 1
+    try:
+        pl = int(ctl.get("powerline"))
+    except (TypeError, ValueError):
+        return 1
+    if pl == 50:
+        return 1
+    if pl == 60:
+        return 2
+    if pl in (0, 1, 2):
+        return pl
+    return 1
+
+
+def set_live_30fps() -> None:
+    """Keep Ego AM window + lock exposure to the UVC 50/60 Hz grid.
+
+    MIRA220 is global-shutter. Indoor flicker dies only when T_exp is an
+    integer number of AC half-cycles (10 ms @ 50 Hz, 8.333 ms @ 60 Hz)
+    using the real ROW_LENGTH, not a guessed 8.14 µs/line. Iris / AE
+    priority / backlight are applied first; the AC snap is last so they
+    cannot walk off the grid. Both sensor contexts A and B are written:
+    the old path only wrote EXP_TIME_A and the stream can use B.
     """
     if not AM:
         return
@@ -282,44 +327,89 @@ def set_live_30fps() -> None:
     fps = int(ctl.get("fps") or 30)
     if fps not in (15, 30, 60):
         fps = 30
-    line_us = 8.14
-    frame_lines = int(round(1000000.0 / (fps * line_us)))
-    vblank = max(16, frame_lines - CAM_H)
-    pl = int(ctl.get("powerline") or 0)
-    period_us = 10000 if pl == 1 else 8333 if pl == 2 else 0
+    pl = _uvc_powerline(ctl)
+    row = _mira_row_length()
+    t_row = row / MIRA_CLK_HZ
+    line_us = t_row * 1e6
+
     if int(ctl.get("ae") or 1) == 2:
-        exp = 3600 if fps <= 30 else 1800
+        target_us = 29304.0 if fps <= 30 else 14652.0
         if int(ctl.get("backlight") or 0):
-            exp = int(exp * 1.25)
-        if period_us:
-            exp_us_a = max(period_us, int((int(exp * line_us) + period_us / 2) / period_us) * period_us)
-            exp = exp_us_a / line_us
-        exp = min(frame_lines - 8, int(exp))
+            target_us *= 1.25
+        if int(ctl.get("ae_priority") or 0):
+            target_us *= 1.35
     else:
-        exp_us = max(100, int(ctl.get("exposure") or 300) * 100)
-        if period_us:
-            exp_us = max(period_us, int((exp_us + period_us / 2) / period_us) * period_us)
-        exp = max(8, min(frame_lines - 8, int(exp_us / line_us)))
+        target_us = max(100.0, float(int(ctl.get("exposure") or 300) * 100))
+    iris = max(0, min(10, int(ctl.get("iris") or 0)))
+    if iris:
+        target_us *= (10 - min(iris, 9)) / 10.0
+
+    half_n = 0
+    if pl == 1:
+        half_s = 0.01
+        frame_s = 0.04
+        fps = 25
+    elif pl == 2:
+        half_s = 1.0 / 120.0
+        frame_s = 1.0 / 30.0
+        fps = 30
+    else:
+        half_s = 0.0
+        frame_s = 1.0 / float(fps)
+
+    if half_s:
+        half_n = max(1, int(round((target_us * 1e-6) / half_s)))
+        max_n = max(1, int(frame_s / half_s) - 1)
+        half_n = min(half_n, max_n)
+        exp = max(8, int(round(half_n * half_s / t_row)))
+        frame_lines = max(CAM_H + 16, int(round(frame_s / t_row)))
+    else:
+        exp = max(8, int(round(target_us / line_us)))
+        frame_lines = max(CAM_H + 16, int(round(frame_s / t_row)))
+
+    vblank = max(16, frame_lines - CAM_H)
+    exp = max(8, min(frame_lines - 8, exp))
+    n = int(shared.get("_mira_n") or 0) + 1
+    shared["_mira_n"] = n
     try:
-        _i2c_wr16(3, 0x107D, 0)
-        _i2c_wr16(3, 0x200A, 0)
-        _i2c_wr16(3, 0x1087, CAM_H)
-        _i2c_wr16(3, 0x2008, CAM_W // 2)
-        _i2c_wr16(3, 0x207D, CAM_W)
-        _i2c_wr16(3, 0x100C, exp)
-        _i2c_wr16(3, 0x1012, vblank)
-        _i2c_wr16(3, 0x1103, vblank)
-        vstart = _i2c_rd16(3, 0x107D)
-        got_exp = _i2c_rd16(3, 0x100C)
-        got_vb = _i2c_rd16(3, 0x1012)
-        sig = (got_exp, got_vb, vstart, fps)
-        if shared.get("_mira_sig") != sig:
-            print(
-                "mira220: exp %d vblank %d vstart %d fps %d"
-                % (got_exp, got_vb, vstart, fps),
-                flush=True,
-            )
-            shared["_mira_sig"] = sig
+        if n <= 2 or n % 30 == 0:
+            _i2c_wr16(3, 0x107D, 0)
+            _i2c_wr16(3, 0x200A, 0)
+            _i2c_wr16(3, 0x1087, CAM_H)
+            _i2c_wr16(3, 0x2008, CAM_W // 2)
+            _i2c_wr16(3, 0x207D, CAM_W)
+        _i2c_wr16(3, MIRA_EXP_A, exp)
+        _i2c_wr16(3, MIRA_EXP_B, exp)
+        _i2c_wr16(3, MIRA_VBLANK_A, vblank)
+        _i2c_wr16(3, MIRA_VBLANK_B, vblank)
+        if n <= 2 or n % 30 == 0:
+            vstart = _i2c_rd16(3, 0x107D)
+            got_exp = _i2c_rd16(3, MIRA_EXP_A)
+            got_exp_b = _i2c_rd16(3, MIRA_EXP_B)
+            got_vb = _i2c_rd16(3, MIRA_VBLANK_A)
+            exp_ms = got_exp * t_row * 1e3
+            frm_ms = (CAM_H + got_vb) * t_row * 1e3
+            sig = (got_exp, got_exp_b, got_vb, vstart, fps, pl, row)
+            if shared.get("_mira_sig") != sig:
+                print(
+                    "mira220: exp %d/%d vblank %d vstart %d row %d tus %.3f "
+                    "n %d fps %d pl %d exp_ms %.3f frm_ms %.3f"
+                    % (
+                        got_exp,
+                        got_exp_b,
+                        got_vb,
+                        vstart,
+                        row,
+                        line_us,
+                        half_n,
+                        fps,
+                        pl,
+                        exp_ms,
+                        frm_ms,
+                    ),
+                    flush=True,
+                )
+                shared["_mira_sig"] = sig
     except Exception as exc:
         print("mira220 fps", exc, flush=True)
 
@@ -337,8 +427,10 @@ def _awb_lut_c():
     global _LUT_R_C, _LUT_G_C, _LUT_B_C
     ctl = shared.get("_uvc_ctl") or {}
     gain = (int(ctl.get("gain") or 32) + 32) / 64.0
-    bright = int(ctl.get("brightness") or 0)
-    sig = (gain, bright)
+    if int(ctl.get("ae_priority") or 0):
+        gain *= 1.20
+    bright = int(ctl.get("brightness") or 128) - 128
+    sig = (gain, bright, int(ctl.get("ae_priority") or 0))
     if _LUT_R_C is not None and shared.get("_lut_sig") == sig:
         return _LUT_R_C, _LUT_G_C, _LUT_B_C
     r = bytearray(1024)
@@ -557,6 +649,7 @@ def grab_am() -> None:
     ring = [bytearray(VIEW_FRAME) for _ in range(3)]
     slot = 0
     set_live_30fps()
+    n = 0
     while True:
         cap = None
         try:
@@ -570,6 +663,8 @@ def grab_am() -> None:
                 shared["cam0"] = ring[slot]
                 _mark_fps()
                 slot = (slot + 1) % 3
+                n += 1
+                set_live_30fps()
         except Exception as exc:
             print("grab mmap", type(exc).__name__, exc, flush=True)
             time.sleep(0.2)
@@ -674,6 +769,203 @@ def shrink_nv12(src, sw: int, sh: int, dw: int, dh: int):
     return out
 
 
+def _uvc_look_needed(ctl: dict) -> bool:
+    return bool(
+        int(ctl.get("contrast") or 32) != 32
+        or int(ctl.get("saturation") or 32) != 32
+        or int(ctl.get("hue") or 0) != 0
+        or int(ctl.get("gamma") or 100) != 100
+        or int(ctl.get("sharpness") or 16) != 16
+        or int(ctl.get("zoom") or 100) != 100
+        or int(ctl.get("pan") or 0) != 0
+        or int(ctl.get("tilt") or 0) != 0
+        or int(ctl.get("roll") or 0) != 0
+        or int(ctl.get("backlight") or 0) != 0
+        or int(ctl.get("wb_auto") or 1) == 0
+        or int(ctl.get("wb_comp_auto") or 1) == 0
+        or int(ctl.get("color_enable") or 1) == 0
+        or int(ctl.get("privacy") or 0) != 0
+        or int(ctl.get("hue_auto") or 0)
+        or int(ctl.get("contrast_auto") or 0)
+        or int(ctl.get("hflip") or 0)
+        or int(ctl.get("vflip") or 0)
+        or int(ctl.get("scanning") or 1) == 0
+    )
+
+
+def crop_nv12(src, sw: int, sh: int, ox: int, oy: int, cw: int, ch: int):
+    cw = max(2, cw // 2 * 2)
+    ch = max(2, ch // 2 * 2)
+    ox = max(0, min(sw - cw, ox // 2 * 2))
+    oy = max(0, min(sh - ch, oy // 2 * 2))
+    if not isinstance(src, (bytes, bytearray, memoryview)):
+        src = bytes(src)
+    ysz = sw * sh
+    out = bytearray(cw * ch * 3 // 2)
+    for row in range(ch):
+        s = (oy + row) * sw + ox
+        d = row * cw
+        out[d : d + cw] = src[s : s + cw]
+    suw = sw // 2
+    duw = cw // 2
+    base = cw * ch
+    uvo = ysz + (oy // 2) * sw + ox
+    for row in range(ch // 2):
+        s = uvo + row * sw
+        d = base + row * cw
+        out[d : d + cw] = src[s : s + cw]
+    return out, cw, ch
+
+
+def rotate_nv12_90(src, w: int, h: int, turns: int):
+    turns %= 4
+    if turns == 0:
+        return src, w, h
+    import numpy as np
+
+    ysz = w * h
+    y = np.frombuffer(src, dtype=np.uint8, count=ysz).reshape(h, w)
+    uv = np.frombuffer(src, dtype=np.uint8, offset=ysz, count=ysz // 2).reshape(h // 2, w)
+    u = uv[:, 0::2]
+    v = uv[:, 1::2]
+    for _ in range(turns):
+        y = np.rot90(y, 1)
+        u = np.rot90(u, 1)
+        v = np.rot90(v, 1)
+    nh, nw = y.shape
+    out_uv = np.empty((nh // 2, nw), dtype=np.uint8)
+    out_uv[:, 0::2] = u
+    out_uv[:, 1::2] = v
+    return y.tobytes() + out_uv.tobytes(), nw, nh
+
+
+def apply_uvc_look(nv12, w: int, h: int, ctl: dict):
+    """Post-AWB VideoProcAmp / Camera Control. Official AWB LUTs stay intact."""
+    if not ctl or not _uvc_look_needed(ctl):
+        return nv12, w, h
+    if int(ctl.get("privacy") or 0):
+        return bytes(w * h) + bytes([128]) * (w * h // 2), w, h
+    try:
+        import numpy as np
+    except Exception:
+        return nv12, w, h
+    ysz = w * h
+    if not isinstance(nv12, (bytes, bytearray, memoryview)) or len(nv12) < ysz + ysz // 2:
+        return nv12, w, h
+    y = np.frombuffer(nv12, dtype=np.uint8, count=ysz).reshape(h, w).copy()
+    uv = np.frombuffer(nv12, dtype=np.uint8, offset=ysz, count=ysz // 2).reshape(h // 2, w).copy()
+
+    contrast = 32 if int(ctl.get("contrast_auto") or 0) else int(ctl.get("contrast") or 32)
+    if contrast != 32:
+        y = np.clip(128.0 + (y.astype(np.float32) - 128.0) * (contrast / 32.0), 0, 255).astype(np.uint8)
+
+    gamma = int(ctl.get("gamma") or 100)
+    if gamma != 100:
+        lut = (np.linspace(0.0, 1.0, 256) ** (100.0 / max(gamma, 1)) * 255.0).astype(np.uint8)
+        y = lut[y]
+
+    sharp = int(ctl.get("sharpness") or 16)
+    if sharp != 16:
+        blur = y.astype(np.int16)
+        acc = (
+            np.roll(blur, 1, 0)
+            + np.roll(blur, -1, 0)
+            + np.roll(blur, 1, 1)
+            + np.roll(blur, -1, 1)
+        ) // 4
+        y = np.clip(blur + (blur - acc) * ((sharp - 16) / 16.0), 0, 255).astype(np.uint8)
+
+    if int(ctl.get("backlight") or 0):
+        lift = np.clip((48 - y.astype(np.int16) // 6), 0, 48)
+        y = np.clip(y.astype(np.int16) + lift, 0, 255).astype(np.uint8)
+
+    hue = 0 if int(ctl.get("hue_auto") or 0) else int(ctl.get("hue") or 0)
+    sat = int(ctl.get("saturation") or 32)
+    color_on = int(ctl.get("color_enable") or 1) and sat > 0
+    u = uv[:, 0::2].astype(np.int16) - 128
+    v = uv[:, 1::2].astype(np.int16) - 128
+    if not color_on:
+        u[:] = 0
+        v[:] = 0
+    else:
+        if hue:
+            import math
+
+            rad = hue * math.pi / 180.0
+            ch, shn = math.cos(rad), math.sin(rad)
+            u2 = u * ch - v * shn
+            v2 = u * shn + v * ch
+            u, v = u2, v2
+        if sat != 32:
+            sf = sat / 32.0
+            u = u * sf
+            v = v * sf
+        if int(ctl.get("wb_auto") or 1) == 0:
+            temp = int(ctl.get("wb_temp") or 4500)
+            warm = (temp - 4500) / 1700.0
+            v = v + warm * 18.0
+            u = u - warm * 10.0
+        if int(ctl.get("wb_comp_auto") or 1) == 0:
+            u = u + (int(ctl.get("wb_blue") or 128) - 128) * 0.35
+            v = v + (int(ctl.get("wb_red") or 128) - 128) * 0.35
+        u = np.clip(u, -128, 127)
+        v = np.clip(v, -128, 127)
+    uv[:, 0::2] = (u + 128).astype(np.uint8)
+    uv[:, 1::2] = (v + 128).astype(np.uint8)
+    out = y.tobytes() + uv.tobytes()
+
+    zoom = max(100, min(400, int(ctl.get("zoom") or 100)))
+    pan = int(ctl.get("pan") or 0)
+    tilt = int(ctl.get("tilt") or 0)
+    if zoom != 100 or pan or tilt:
+        z = zoom / 100.0
+        cw = max(2, int(w / z) // 2 * 2)
+        ch = max(2, int(h / z) // 2 * 2)
+        mx = w - cw
+        my = h - ch
+        ox = (mx // 2) + int(pan * mx / 1296000.0)
+        oy = (my // 2) - int(tilt * my / 1296000.0)
+        out, w, h = crop_nv12(out, w, h, ox, oy, cw, ch)
+
+    hflip = int(ctl.get("hflip") or 0)
+    vflip = int(ctl.get("vflip") or 0)
+    if int(ctl.get("scanning") or 1) == 0:
+        hflip, vflip = 1, 1
+    roll = int(ctl.get("roll") or 0)
+    q = int((roll + 360 + 45) // 90) % 4 if roll else 0
+    if q == 2:
+        hflip ^= 1
+        vflip ^= 1
+        q = 0
+    if hflip or vflip:
+        out = flip_nv12(out, w, h, hflip, vflip)
+    if q:
+        out, w, h = rotate_nv12_90(out, w, h, q)
+    return out, w, h
+
+
+def flip_nv12(src, w: int, h: int, hflip: int, vflip: int):
+    """Mirror NV12 without touching the MIPI sensor (v4l flip wedges AM)."""
+    try:
+        import numpy as np
+    except Exception:
+        return src
+    if not isinstance(src, (bytes, bytearray, memoryview)):
+        src = bytes(src)
+    ysz = w * h
+    if len(src) < ysz + ysz // 2:
+        return src
+    y = np.frombuffer(src, dtype=np.uint8, count=ysz).reshape(h, w)
+    uv = np.frombuffer(src, dtype=np.uint8, offset=ysz, count=ysz // 2).reshape(h // 2, w)
+    if hflip:
+        y = y[:, ::-1]
+        uv = uv.reshape(h // 2, w // 2, 2)[:, ::-1, :].reshape(h // 2, w)
+    if vflip:
+        y = y[::-1, :]
+        uv = uv[::-1, :]
+    return y.tobytes() + uv.tobytes()
+
+
 def _write_jpg(path: str, jpg: bytes) -> None:
     tmp = path + ".tmp"
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
@@ -710,24 +1002,29 @@ def encode_loop(enc: TurboEnc) -> None:
             except OSError:
                 pass
         ctl = shared.get("_uvc_ctl") or {}
+        look, lw, lh = apply_uvc_look(frame, VIEW_W, VIEW_H, ctl)
+        looked = look is not frame or (lw, lh) != (VIEW_W, VIEW_H)
         tw = int(ctl.get("w") or 0)
         th = int(ctl.get("h") or 0)
-        if tw > 0 and th > 0 and (tw, th) != (VIEW_W, VIEW_H):
+        if tw <= 0 or th <= 0:
+            tw, th = lw, lh
+        if looked or (tw, th) != (lw, lh):
             if uvc_wh != (tw, th):
                 try:
                     uvc_enc = TurboEnc(tw, th, 70)
                 except Exception:
                     uvc_enc = None
                 uvc_wh = (tw, th)
-            if uvc_enc is not None:
-                small = shrink_nv12(frame, VIEW_W, VIEW_H, tw, th)
-                if small:
-                    uj = uvc_enc.encode(small)
-                    if uj:
-                        try:
-                            _write_jpg(UVC_JPG, uj)
-                        except OSError:
-                            pass
+            src = look
+            if (tw, th) != (lw, lh):
+                src = shrink_nv12(look, lw, lh, tw, th)
+            if src and uvc_enc is not None:
+                uj = uvc_enc.encode(src)
+                if uj:
+                    try:
+                        _write_jpg(UVC_JPG, uj)
+                    except OSError:
+                        pass
         elif jpg:
             try:
                 _write_jpg(UVC_JPG, jpg)

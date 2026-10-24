@@ -35,21 +35,42 @@ LOG = "/userdata/cv-uvc-bridge.log"
 INTERVALS = (166666, 333333, 666666)
 CT_ID = 1
 PU_IDS = (2, 6)
-# Camera terminal
+# Camera terminal (UVC 1.5 Table 4-13)
+CT_SCANNING = 0x01
 CT_AE_MODE = 0x02
 CT_AE_PRIORITY = 0x03
 CT_EXPOSURE_ABS = 0x04
-# Processing unit
+CT_EXPOSURE_REL = 0x05
+CT_FOCUS_ABS = 0x06
+CT_FOCUS_REL = 0x07
+CT_FOCUS_AUTO = 0x08
+CT_IRIS_ABS = 0x09
+CT_IRIS_REL = 0x0A
+CT_ZOOM_ABS = 0x0B
+CT_ZOOM_REL = 0x0C
+CT_PANTILT_ABS = 0x0D
+CT_PANTILT_REL = 0x0E
+CT_ROLL_ABS = 0x0F
+CT_ROLL_REL = 0x10
+CT_PRIVACY = 0x11
+# Processing unit (UVC 1.5 Table 4-23)
 PU_BACKLIGHT = 0x01
 PU_BRIGHTNESS = 0x02
 PU_CONTRAST = 0x03
 PU_GAIN = 0x04
 PU_POWERLINE = 0x05
+PU_HUE = 0x06
 PU_SATURATION = 0x07
 PU_SHARPNESS = 0x08
 PU_GAMMA = 0x09
 PU_WB_TEMP = 0x0A
 PU_WB_AUTO = 0x0B
+PU_WB_COMP = 0x0C
+PU_WB_COMP_AUTO = 0x0D
+PU_DIGITAL_MULT = 0x0E
+PU_DIGITAL_LIMIT = 0x0F
+PU_HUE_AUTO = 0x10
+PU_CONTRAST_AUTO = 0x13
 
 V4L2_BUF_TYPE_VIDEO_OUTPUT = 2
 V4L2_MEMORY_MMAP = 1
@@ -241,6 +262,10 @@ def u32(n: int) -> bytes:
     return struct.pack("<I", max(0, int(n)) & 0xFFFFFFFF)
 
 
+def s32(n: int) -> bytes:
+    return struct.pack("<i", max(-2147483648, min(2147483647, int(n))))
+
+
 class Controls:
     """Standard UVC CT/PU values Windows Camera maps to sliders."""
 
@@ -248,16 +273,34 @@ class Controls:
         self.ae = 1  # manual so shutter/exposure sliders work
         self.ae_priority = 0
         self.exposure = 300  # 30.0 ms, 100 µs units
-        self.brightness = 8
-        self.contrast = 36
+        self.scanning = 1  # progressive
+        self.focus = 128
+        self.focus_auto = 0
+        self.iris = 0
+        self.zoom = 100
+        self.pan = 0
+        self.tilt = 0
+        self.roll = 0
+        self.hflip = 0
+        self.vflip = 0
+        self.privacy = 0
+        self.brightness = 128
+        self.contrast = 32
+        self.contrast_auto = 0
+        self.hue = 0
+        self.hue_auto = 0
         self.saturation = 32
         self.sharpness = 16
-        self.gamma = 90
+        self.gamma = 100
         self.gain = 44
         self.backlight = 0
         self.powerline = 1
         self.wb_temp = 4500
         self.wb_auto = 1
+        self.wb_blue = 128
+        self.wb_red = 128
+        self.wb_comp_auto = 1
+        self.color_enable = 1
         self.frame = 1
         self.interval = 333333
         self._write()
@@ -277,8 +320,22 @@ class Controls:
             "ae": self.ae,
             "exposure": self.exposure,
             "ae_priority": self.ae_priority,
+            "scanning": self.scanning,
+            "focus": self.focus,
+            "focus_auto": self.focus_auto,
+            "iris": self.iris,
+            "zoom": self.zoom,
+            "pan": self.pan,
+            "tilt": self.tilt,
+            "roll": self.roll,
+            "hflip": self.hflip,
+            "vflip": self.vflip,
+            "privacy": self.privacy,
             "brightness": self.brightness,
             "contrast": self.contrast,
+            "contrast_auto": self.contrast_auto,
+            "hue": self.hue,
+            "hue_auto": self.hue_auto,
             "saturation": self.saturation,
             "sharpness": self.sharpness,
             "gamma": self.gamma,
@@ -287,6 +344,10 @@ class Controls:
             "powerline": self.powerline,
             "wb_temp": self.wb_temp,
             "wb_auto": self.wb_auto,
+            "wb_blue": self.wb_blue,
+            "wb_red": self.wb_red,
+            "wb_comp_auto": self.wb_comp_auto,
+            "color_enable": self.color_enable,
         }
 
     def _write(self) -> None:
@@ -302,6 +363,10 @@ class Controls:
             os.replace(tmp, CTL_PATH)
         except OSError as exc:
             log("ctl %s" % exc)
+
+    def _info(self, auto_off: bool = False) -> int:
+        # D0 GET, D1 SET, D2 disabled because automatic mode is on
+        return 0x05 if auto_off else 0x03
 
     def get(self, entity: int, cs: int, req: int, wlen: int) -> bytes | None:
         spec = self._spec(entity, cs)
@@ -324,37 +389,105 @@ class Controls:
             return cur
         return cur[: min(len(cur), wlen)]
 
+    def _step(self, name: str, delta: int, lo: int, hi: int) -> None:
+        setattr(self, name, max(lo, min(hi, int(getattr(self, name)) + delta)))
+
     def set(self, entity: int, cs: int, payload: bytes) -> bool:
         if entity == CT_ID:
-            if cs == CT_AE_MODE and payload:
+            if cs == CT_SCANNING and payload:
+                self.scanning = 1 if payload[0] else 0
+                self.hflip = 0 if self.scanning else 1
+                self.vflip = 0 if self.scanning else 1
+            elif cs == CT_AE_MODE and payload:
                 self.ae = 2 if payload[0] & 2 else 1
             elif cs == CT_AE_PRIORITY and payload:
                 self.ae_priority = 1 if payload[0] else 0
             elif cs == CT_EXPOSURE_ABS and len(payload) >= 4:
                 self.exposure = max(1, min(666, struct.unpack_from("<I", payload)[0]))
+            elif cs == CT_EXPOSURE_REL and payload:
+                step = payload[0] if payload[0] < 128 else payload[0] - 256
+                self._step("exposure", step * 10, 1, 666)
+            elif cs == CT_FOCUS_ABS and len(payload) >= 2:
+                self.focus = max(0, min(255, struct.unpack_from("<H", payload)[0] if len(payload) < 4 else struct.unpack_from("<I", payload)[0]))
+            elif cs == CT_FOCUS_REL and payload:
+                step = payload[0] if payload[0] < 128 else payload[0] - 256
+                self._step("focus", step, 0, 255)
+            elif cs == CT_FOCUS_AUTO and payload:
+                self.focus_auto = 1 if payload[0] else 0
+            elif cs == CT_IRIS_ABS and len(payload) >= 2:
+                raw_iris = struct.unpack_from("<h", payload)[0]
+                self.iris = max(0, min(10, raw_iris))
+            elif cs == CT_IRIS_REL and payload:
+                step = payload[0] if payload[0] < 128 else payload[0] - 256
+                self._step("iris", step, 0, 10)
+            elif cs in (CT_ZOOM_ABS, PU_DIGITAL_MULT) and len(payload) >= 2:
+                self.zoom = max(100, min(400, struct.unpack_from("<H", payload)[0]))
+            elif cs == CT_ZOOM_REL and payload:
+                step = payload[0] if payload[0] < 128 else payload[0] - 256
+                self._step("zoom", step * 10, 100, 400)
+            elif cs == CT_PANTILT_ABS and len(payload) >= 8:
+                self.pan = max(-648000, min(648000, struct.unpack_from("<i", payload, 0)[0]))
+                self.tilt = max(-648000, min(648000, struct.unpack_from("<i", payload, 4)[0]))
+            elif cs == CT_PANTILT_REL and payload:
+                pd = payload[0] if payload[0] < 128 else payload[0] - 256
+                td = payload[1] if len(payload) > 1 and payload[1] < 128 else (payload[1] - 256 if len(payload) > 1 else 0)
+                self._step("pan", pd * 3600, -648000, 648000)
+                self._step("tilt", td * 3600, -648000, 648000)
+            elif cs == CT_ROLL_ABS and len(payload) >= 2:
+                self.roll = max(-180, min(180, struct.unpack_from("<h", payload)[0]))
+                self.hflip = 1 if abs(self.roll) >= 135 else 0
+                self.vflip = 1 if abs(self.roll) >= 135 else 0
+            elif cs == CT_ROLL_REL and payload:
+                step = payload[0] if payload[0] < 128 else payload[0] - 256
+                self._step("roll", step * 15, -180, 180)
+                self.hflip = 1 if abs(self.roll) >= 135 else 0
+                self.vflip = 1 if abs(self.roll) >= 135 else 0
+            elif cs == CT_PRIVACY and payload:
+                self.privacy = 1 if payload[0] else 0
             else:
                 return False
         elif entity in PU_IDS:
             if cs == PU_BRIGHTNESS and len(payload) >= 2:
-                self.brightness = max(-64, min(64, struct.unpack_from("<h", payload)[0]))
+                self.brightness = max(0, min(255, struct.unpack_from("<h", payload)[0]))
             elif cs == PU_CONTRAST and len(payload) >= 2:
                 self.contrast = max(0, min(64, struct.unpack_from("<h", payload)[0]))
+            elif cs == PU_CONTRAST_AUTO and payload:
+                self.contrast_auto = 1 if payload[0] else 0
+            elif cs == PU_HUE and len(payload) >= 2:
+                self.hue = max(-180, min(180, struct.unpack_from("<h", payload)[0]))
+            elif cs == PU_HUE_AUTO and payload:
+                self.hue_auto = 1 if payload[0] else 0
             elif cs == PU_SATURATION and len(payload) >= 2:
                 self.saturation = max(0, min(64, struct.unpack_from("<h", payload)[0]))
+                self.color_enable = 0 if self.saturation == 0 else 1
             elif cs == PU_SHARPNESS and len(payload) >= 2:
                 self.sharpness = max(0, min(64, struct.unpack_from("<h", payload)[0]))
             elif cs == PU_GAMMA and len(payload) >= 2:
-                self.gamma = max(80, min(160, struct.unpack_from("<h", payload)[0]))
+                self.gamma = max(80, min(500, struct.unpack_from("<h", payload)[0]))
             elif cs == PU_GAIN and len(payload) >= 2:
                 self.gain = max(0, min(128, struct.unpack_from("<h", payload)[0]))
             elif cs == PU_BACKLIGHT and len(payload) >= 2:
                 self.backlight = 1 if struct.unpack_from("<h", payload)[0] else 0
             elif cs == PU_POWERLINE and payload:
-                self.powerline = payload[0] if payload[0] in (0, 1, 2) else 1
+                raw_pl = payload[0]
+                if raw_pl in (0, 1, 2):
+                    self.powerline = raw_pl
+                elif raw_pl == 50:
+                    self.powerline = 1
+                elif raw_pl == 60:
+                    self.powerline = 2
             elif cs == PU_WB_TEMP and len(payload) >= 2:
-                self.wb_temp = max(2800, min(6500, struct.unpack_from("<h", payload)[0]))
+                raw_wb = struct.unpack_from("<I", payload)[0] if len(payload) >= 4 else struct.unpack_from("<H", payload)[0]
+                self.wb_temp = max(2800, min(6500, raw_wb))
             elif cs == PU_WB_AUTO and payload:
                 self.wb_auto = 1 if payload[0] else 0
+            elif cs == PU_WB_COMP and len(payload) >= 4:
+                self.wb_blue = max(0, min(255, struct.unpack_from("<H", payload, 0)[0]))
+                self.wb_red = max(0, min(255, struct.unpack_from("<H", payload, 2)[0]))
+            elif cs == PU_WB_COMP_AUTO and payload:
+                self.wb_comp_auto = 1 if payload[0] else 0
+            elif cs in (PU_DIGITAL_MULT, PU_DIGITAL_LIMIT) and len(payload) >= 2:
+                self.zoom = max(100, min(400, struct.unpack_from("<H", payload)[0]))
             else:
                 return False
         else:
@@ -364,12 +497,14 @@ class Controls:
 
     def _spec(self, entity: int, cs: int):
         # cur, min, max, res, def, info(GET+SET)
-        info = 0x03
+        ok = 0x03
         if entity == CT_ID:
+            if cs == CT_SCANNING:
+                return bytes([self.scanning]), b"\x00", b"\x01", b"\x01", b"\x01", ok
             if cs == CT_AE_MODE:
-                return bytes([self.ae]), b"\x01", b"\x02", b"\x03", b"\x01", info
+                return bytes([self.ae]), b"\x01", b"\x02", b"\x03", b"\x01", ok
             if cs == CT_AE_PRIORITY:
-                return bytes([self.ae_priority]), b"\x00", b"\x01", b"\x01", b"\x00", info
+                return bytes([self.ae_priority]), b"\x00", b"\x01", b"\x01", b"\x00", ok
             if cs == CT_EXPOSURE_ABS:
                 return (
                     u32(self.exposure),
@@ -377,29 +512,72 @@ class Controls:
                     u32(666),
                     u32(1),
                     u32(180),
-                    info,
+                    self._info(self.ae == 2),
                 )
+            if cs == CT_EXPOSURE_REL:
+                return b"\x00", b"\xff", b"\x01", b"\x01", b"\x00", self._info(self.ae == 2)
+            if cs == CT_FOCUS_ABS:
+                return u16(self.focus), u16(0), u16(255), u16(1), u16(128), self._info(bool(self.focus_auto))
+            if cs == CT_FOCUS_REL:
+                return b"\x00\x01", b"\xff\x01", b"\x01\x01", b"\x01\x01", b"\x00\x01", self._info(bool(self.focus_auto))
+            if cs == CT_FOCUS_AUTO:
+                return bytes([self.focus_auto]), b"\x00", b"\x01", b"\x01", b"\x00", ok
+            if cs == CT_IRIS_ABS:
+                return u16(self.iris), u16(0), u16(10), u16(1), u16(0), ok
+            if cs == CT_IRIS_REL:
+                return b"\x00", b"\xff", b"\x01", b"\x01", b"\x00", ok
+            if cs == CT_ZOOM_ABS:
+                return u16(self.zoom), u16(100), u16(400), u16(10), u16(100), ok
+            if cs == CT_ZOOM_REL:
+                return b"\x00\x00\x01", b"\xff\x00\x01", b"\x01\x00\x01", b"\x01\x00\x01", b"\x00\x00\x01", ok
+            if cs == CT_PANTILT_ABS:
+                cur = s32(self.pan) + s32(self.tilt)
+                return cur, s32(-648000) + s32(-648000), s32(648000) + s32(648000), s32(3600) + s32(3600), s32(0) + s32(0), ok
+            if cs == CT_PANTILT_REL:
+                z = b"\x00\x00\x00\x00"
+                return z, b"\xff\x00\xff\x00", b"\x01\x00\x01\x00", b"\x01\x00\x01\x00", z, ok
+            if cs == CT_ROLL_ABS:
+                return s16(self.roll), s16(-180), s16(180), s16(1), s16(0), ok
+            if cs == CT_ROLL_REL:
+                return b"\x00", b"\xff", b"\x01", b"\x01", b"\x00", ok
+            if cs == CT_PRIVACY:
+                return bytes([self.privacy]), b"\x00", b"\x01", b"\x01", b"\x00", ok
         if entity in PU_IDS:
             if cs == PU_BRIGHTNESS:
-                return s16(self.brightness), s16(-64), s16(64), s16(1), s16(8), info
+                return s16(self.brightness), s16(0), s16(255), s16(1), s16(128), ok
             if cs == PU_CONTRAST:
-                return s16(self.contrast), s16(0), s16(64), s16(1), s16(32), info
+                return s16(self.contrast), s16(0), s16(64), s16(1), s16(32), self._info(bool(self.contrast_auto))
+            if cs == PU_CONTRAST_AUTO:
+                return bytes([self.contrast_auto]), b"\x00", b"\x01", b"\x01", b"\x00", ok
+            if cs == PU_HUE:
+                return s16(self.hue), s16(-180), s16(180), s16(1), s16(0), self._info(bool(self.hue_auto))
+            if cs == PU_HUE_AUTO:
+                return bytes([self.hue_auto]), b"\x00", b"\x01", b"\x01", b"\x00", ok
             if cs == PU_SATURATION:
-                return s16(self.saturation), s16(0), s16(64), s16(1), s16(32), info
+                return s16(self.saturation), s16(0), s16(64), s16(1), s16(32), ok
             if cs == PU_SHARPNESS:
-                return s16(self.sharpness), s16(0), s16(64), s16(1), s16(16), info
+                return s16(self.sharpness), s16(0), s16(64), s16(1), s16(16), ok
             if cs == PU_GAMMA:
-                return s16(self.gamma), s16(80), s16(160), s16(1), s16(100), info
+                return s16(self.gamma), s16(80), s16(500), s16(1), s16(100), ok
             if cs == PU_GAIN:
-                return s16(self.gain), s16(0), s16(128), s16(1), s16(32), info
+                return s16(self.gain), s16(0), s16(128), s16(1), s16(32), ok
             if cs == PU_BACKLIGHT:
-                return s16(self.backlight), s16(0), s16(1), s16(1), s16(0), info
+                return s16(self.backlight), s16(0), s16(1), s16(1), s16(0), ok
             if cs == PU_POWERLINE:
-                return bytes([self.powerline]), b"\x00", b"\x02", b"\x01", b"\x01", info
+                return bytes([self.powerline]), b"\x00", b"\x02", b"\x01", b"\x01", ok
             if cs == PU_WB_TEMP:
-                return s16(self.wb_temp), s16(2800), s16(6500), s16(100), s16(4500), info
+                return u16(self.wb_temp), u16(2800), u16(6500), u16(100), u16(4500), self._info(bool(self.wb_auto))
             if cs == PU_WB_AUTO:
-                return bytes([self.wb_auto]), b"\x00", b"\x01", b"\x01", b"\x01", info
+                return bytes([self.wb_auto]), b"\x00", b"\x01", b"\x01", b"\x01", ok
+            if cs == PU_WB_COMP:
+                cur = u16(self.wb_blue) + u16(self.wb_red)
+                return cur, u16(0) + u16(0), u16(255) + u16(255), u16(1) + u16(1), u16(128) + u16(128), self._info(bool(self.wb_comp_auto))
+            if cs == PU_WB_COMP_AUTO:
+                return bytes([self.wb_comp_auto]), b"\x00", b"\x01", b"\x01", b"\x01", ok
+            if cs == PU_DIGITAL_MULT:
+                return u16(self.zoom), u16(100), u16(400), u16(10), u16(100), ok
+            if cs == PU_DIGITAL_LIMIT:
+                return u16(400), u16(100), u16(400), u16(10), u16(400), ok
         return None
 
 

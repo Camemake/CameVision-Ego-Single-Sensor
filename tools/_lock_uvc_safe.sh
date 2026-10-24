@@ -14,7 +14,8 @@ busybox telnetd -l /bin/sh -p 2323 2>/dev/null || true
 
 exec 9>/tmp/cv-lock-uvc.lock
 if command -v flock >/dev/null 2>&1; then
-	flock -n 9 || { log LOCKED; exit 0; }
+	# BusyBox flock has no -w. Block until the previous bind exits.
+	flock 9 || { log LOCK_BUSY; exit 1; }
 fi
 
 _prep_configfs() {
@@ -112,6 +113,10 @@ echo 500 > $C/MaxPower
 echo uvc+msc > $C/strings/0x409/configuration
 echo high-speed > $G/max_speed
 
+# Fresh function so bmControls is writable (linked headers freeze it).
+if [ -e $F/$UVC_GS/control/class/fs/h ] || [ -d $F/$UVC_GS/control/header/h ]; then
+	_destroy_uvc $F/$UVC_GS
+fi
 mkdir -p $F/$UVC_GS
 echo Camemake > $F/$UVC_GS/device_name
 echo Camemake > $F/$UVC_GS/function_name
@@ -120,11 +125,26 @@ echo 2 > $F/$UVC_GS/uvc_num_request
 
 CAM_BM=$F/$UVC_GS/control/terminal/camera/default/bmControls
 PU_BM=$F/$UVC_GS/control/processing/default/bmControls
-# Binary unit bitmaps BEFORE control-header links (attrs go read-only after).
-python3 -c "open(r'$CAM_BM','wb').write(bytes([14,0,0]))" || true
-python3 -c "open(r'$PU_BM','wb').write(bytes([123,23]))" || true
+# ConfigFS wants one decimal byte per line. Write BEFORE header links
+# (attrs go read-only after). Full UVC 1.1 CT + PU bitmaps.
+n=0
+while [ $n -lt 20 ]; do
+	[ -f "$CAM_BM" ] && [ -f "$PU_BM" ] && break
+	n=$((n + 1))
+	sleep 0.1
+done
+# CT: AE, exposure, focus, iris, zoom, pan/tilt, roll, privacy
+printf '255\n127\n6\n' > "$CAM_BM"
+# PU: brightness..WB-comp, backlight, gain, power-line, hue-auto,
+# WB-auto, digital multiplier, contrast-auto
+printf '255\n255\n4\n' > "$PU_BM"
+log CAM_WR=$? CAM_TXT=$(tr '\n' ',' < "$CAM_BM") PU_TXT=$(tr '\n' ',' < "$PU_BM")
 log CAM_BM=$(od -An -tx1 "$CAM_BM")
 log PROC_BM=$(od -An -tx1 "$PU_BM")
+case "$(tr '\n' ',' < "$CAM_BM")" in
+	255,127,6,|255,127,6) log BM_OK ;;
+	*) log BM_RO CAM_TXT=$(tr '\n' ',' < "$CAM_BM") PU_TXT=$(tr '\n' ',' < "$PU_BM") ;;
+esac
 mkdir -p $F/$UVC_GS/control/header/h
 ln -s $F/$UVC_GS/control/header/h $F/$UVC_GS/control/class/fs/h
 ln -s $F/$UVC_GS/control/header/h $F/$UVC_GS/control/class/ss/h
@@ -221,10 +241,10 @@ log UVC_OK BAD=$BAD
 
 touch /userdata/camevision-am.on
 : > /userdata/cv-uvc-bridge.log
-setsid /usr/bin/python3 /userdata/camevision-uvc-bridge.py </dev/null >>/userdata/cv-uvc-bridge.log 2>&1 &
+setsid /usr/bin/python3 /userdata/camevision-uvc-bridge.py </dev/null >>/userdata/cv-uvc-bridge.log 2>&1 9>&- &
 log BRIDGE=$!
 if [ -x /userdata/camevision-usb-sd.sh ]; then
-	setsid /bin/sh /userdata/camevision-usb-sd.sh </dev/null >>/userdata/cv-usb-sd.log 2>&1 &
+	setsid /bin/sh /userdata/camevision-usb-sd.sh </dev/null >>/userdata/cv-usb-sd.log 2>&1 9>&- &
 	log USB_SD=$!
 fi
 sleep 1
