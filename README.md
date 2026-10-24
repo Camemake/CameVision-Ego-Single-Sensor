@@ -127,4 +127,12 @@ Read the family on **[Camemake robotic solutions](https://www.camemake.eu/roboti
 - Commit `wpa_camevision.conf` (local Wi-Fi)
 - Start a second camera — this product is one sensor, one IMU
 
+## License
+
+Camemake's demo firmware, board device-tree sources, and documentation in this repository are released under the [MIT License](LICENSE).
+
+Third-party pieces keep their own terms. That includes the embedded Python under `host/python`, the Rockchip USB driver assistant, UnRAR, and the prebuilt Linux boot images under `restore/`. PCB schematics are not in this repository.
+
+The same file is on the product pages: [LICENSE](https://camemake.github.io/CameVision-Ego-Single-Sensor/LICENSE).
+
 © Camemake. CameVision Ego Single Sensor · CV-EGO01-SS.
