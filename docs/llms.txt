@@ -34,7 +34,14 @@ Camemake’s own demo software, board device-tree sources, and these pages are u
 - [离线工具 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/tool.html): CameVision Ego Single Sensor 离线安装：USB、镜像包、ADB。
 
 ## Sensors
-Six sensor options share this single-sensor board. Each option is its own shop SKU: SmartSens SC233HGS, OmniVision OG02C10, ams OSRAM MIRA220, onsemi AR0235 (colour or monochrome), OmniVision OX05B1S, and Kaimou GS2.3 (soon available).
+Six sensor options share this single-sensor board. Each option is its own shop SKU. Kaimou GS2.3 is soon available.
+
+- [SmartSens SC233HGS](https://www.smartsenstech.com/en/gs_products)
+- [OmniVision OG02C10](https://www.ovt.com/products/og02c10/)
+- [ams OSRAM MIRA220](https://ams-osram.com/products/sensor-solutions/cmos-image-sensors/ams-mira220)
+- [onsemi AR0235](https://www.onsemi.com/products/sensors/image-sensors/ar0235): colour or monochrome
+- [OmniVision OX05B1S](https://www.ovt.com/products/ox05b/)
+- [Kaimou GS2.3](https://www.kaimou-semiconductor.com/en/specification): [kaimou-semiconductor.com](https://www.kaimou-semiconductor.com/)
 
 ## Optional
 - [CameVision EGO](https://camemake.github.io/CameVision-Ego/): the dual-camera stereo board. It is a different product.
