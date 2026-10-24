@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/app.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/app.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/app.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/app.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/datasheet.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/flash.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/hardware.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/hardware.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/hardware.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/hardware.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/"/>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/mechanical.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/mechanical.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/mechanical.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/mechanical.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/optics.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/optics.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/optics.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/optics.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/software.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/software.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/software.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/software.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/start.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/tool.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/tool.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/tool.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/tool.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/app.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/app.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/app.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/app.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/datasheet.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/datasheet.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/flash.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/flash.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/hardware.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/hardware.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/hardware.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/hardware.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/"/>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/mechanical.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/mechanical.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/mechanical.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/mechanical.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/optics.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/optics.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/optics.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/optics.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/software.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/software.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/software.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/software.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/start.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/start.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/tool.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/tool.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/tool.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://camemake.github.io/CameVision-Ego-Single-Sensor/tool.html"/>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/llms.txt</loc>
+    <lastmod>2026-10-24</lastmod>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://camemake.github.io/CameVision-Ego-Single-Sensor/LICENSE</loc>
+    <lastmod>2026-10-24</lastmod>
+    <priority>0.2</priority>
+  </url>
+</urlset>

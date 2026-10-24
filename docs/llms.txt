@@ -1,0 +1,41 @@
+# CameVision Ego Single Sensor
+
+> CameVision Ego Single Sensor (CV-EGO01-SS) is Camemake’s global-shutter AI camera: one camera, one IMU, and an on-board RV1126B with NPU. This site documents the open demo firmware. The board is a commercial Camemake product.
+
+Camemake’s own demo software, board device-tree sources, and these pages are under the MIT License. Embedded Python, the Rockchip USB driver assistant, UnRAR, and the prebuilt Linux boot images keep their own licenses. PCB schematics are not in the repository.
+
+## Product
+- [Shop](https://www.camemake.eu/shop/camevision-ego-single-sensor-4547): CameVision Ego Single Sensor, family CV-EGO01-SS
+- [Repository](https://github.com/Camemake/CameVision-Ego-Single-Sensor): source for this demo
+- [Citation](https://github.com/Camemake/CameVision-Ego-Single-Sensor/blob/main/CITATION.cff): cite Stefaan Joos and Camemake
+
+## Documentation
+- [App · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/app.html): CameVision demo app: Bluetooth preview and record, card, QR trigger, and server upload. Works with Ego Single and Ego.
+- [Datasheet · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/datasheet.html): CameVision Ego Single Sensor digital datasheet: one camera, one IMU. SC233HGS, OG02C10, MIRA220, AR0235, OX05B1S, Kaimou GS2.3.
+- [Flash from Maskrom · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/flash.html): Maskrom flash for CameVision Ego Single Sensor: USB, package, ADB. One camera, one IMU.
+- [Hardware · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/hardware.html): CameVision Ego Single Sensor pinmux: one camera, one IMU.
+- [CameVision Ego Single Sensor · CV-EGO01-SS · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/): CameVision Ego Single Sensor: one global-shutter camera and one IMU. SC233HGS, OG02C10, MIRA220, AR0235, OX05B1S, Kaimou GS2.3. RV1126B NPU.
+- [Mechanical · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/mechanical.html): CameVision Ego Single Sensor mechanical assembly and thermal path for one camera.
+- [Optics · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/optics.html): CameVision Ego Single Sensor 2G4P optics.
+- [Software · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/software.html): CameVision Ego Single Sensor software: Camemake UVC, phone app Standalone and Server modes, live page, offline tool.
+- [Get started · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/start.html): Start CameVision Ego Single Sensor: USB, Maskrom flash, and ADB. One camera and one IMU.
+- [Offline tool · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/tool.html): CameVision Ego Single Sensor offline installer: USB, package, ADB, diagnostics.
+
+## 中文
+- [应用 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/app.html): CameVision 演示应用：蓝牙预览与录像、存储卡、二维码触发、服务器上传。可用于 Ego Single 与 Ego。
+- [规格书 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/datasheet.html): CameVision Ego Single Sensor 规格：一颗相机、一颗 IMU。
+- [烧录 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/flash.html): CameVision Ego Single Sensor Maskrom 烧录。
+- [硬件 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/hardware.html): CameVision Ego Single Sensor 引脚与器件。
+- [CameVision Ego Single Sensor · CV-EGO01-SS · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/): CameVision Ego Single Sensor：一颗全局快门相机、一颗 IMU。SC233HGS、OG02C10、MIRA220、AR0235、OX05B1S、开眸 GS2.3。
+- [结构 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/mechanical.html): CameVision Ego Single Sensor 结构与散热。
+- [光学 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/optics.html): CameVision Ego Single Sensor 2G4P 光学。
+- [软件 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/software.html): CameVision Ego Single Sensor 软件：Camemake UVC、手机应用 Standalone 与 Server、现场页、离线工具。
+- [入门 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/start.html): CameVision Ego Single Sensor 入门：USB、镜像包、ADB。
+- [离线工具 · CameVision Ego Single Sensor · Camemake](https://camemake.github.io/CameVision-Ego-Single-Sensor/zh/tool.html): CameVision Ego Single Sensor 离线安装：USB、镜像包、ADB。
+
+## Sensors
+Six sensor options share this single-sensor board. Each option is its own shop SKU: SmartSens SC233HGS, OmniVision OG02C10, ams OSRAM MIRA220, onsemi AR0235 (colour or monochrome), OmniVision OX05B1S, and Kaimou GS2.3 (soon available).
+
+## Optional
+- [CameVision EGO](https://camemake.github.io/CameVision-Ego/): the dual-camera stereo board. It is a different product.
+- [License](https://camemake.github.io/CameVision-Ego-Single-Sensor/LICENSE): MIT License

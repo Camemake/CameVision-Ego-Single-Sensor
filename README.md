@@ -127,6 +127,10 @@ Read the family on **[Camemake robotic solutions](https://www.camemake.eu/roboti
 - Commit `wpa_camevision.conf` (local Wi-Fi)
 - Start a second camera — this product is one sensor, one IMU
 
+## Citation
+
+If you use this software, cite Stefaan Joos and Camemake. Stefaan Joos is Camemake’s CTO and the author of this repository. GitHub reads [`CITATION.cff`](CITATION.cff).
+
 ## License
 
 Camemake's demo firmware, board device-tree sources, and documentation in this repository are released under the [MIT License](LICENSE).
